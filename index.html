@@ -6,162 +6,295 @@
 <title>WasteTrack — Whitefield</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100%;font-family:Arial,sans-serif;overflow:hidden;background:#0a0e1a;}
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; font-family: Arial, sans-serif; overflow:hidden; }
 
-/* ── LOGIN ────────────────────────────────── */
-#login-screen{position:fixed;inset:0;z-index:9999;background:#0a0e1a;display:flex;flex-direction:column;}
-#login-bg{position:absolute;inset:0;background:#1a2332;overflow:hidden;}
-#login-bg::before{content:'';position:absolute;inset:0;
-  background-image:linear-gradient(rgba(255,200,100,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(255,200,100,.10) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
-  background-size:120px 120px,120px 120px,30px 30px,30px 30px;animation:gridDrift 30s linear infinite;}
-@keyframes gridDrift{from{background-position:0 0,0 0,0 0,0 0;}to{background-position:120px 120px,120px 120px,30px 30px,30px 30px;}}
-#login-bg::after{content:'';position:absolute;inset:0;
-  background-image:radial-gradient(ellipse 200px 130px at 15% 35%,rgba(56,142,60,.15) 0%,transparent 70%),radial-gradient(ellipse 250px 160px at 80% 55%,rgba(56,142,60,.12) 0%,transparent 70%),radial-gradient(ellipse 140px 90px at 55% 75%,rgba(33,150,243,.10) 0%,transparent 70%);}
-.bg-road{position:absolute;background:rgba(255,200,80,.13);}
-.br1{width:4px;height:200%;top:-50%;left:33%;transform:rotate(22deg);}
-.br2{width:3px;height:200%;top:-50%;left:62%;transform:rotate(-14deg);}
-.br3{width:100%;height:3px;top:42%;}.br4{width:100%;height:2px;top:68%;opacity:.6;}
-#login-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(10,14,26,.5) 0%,rgba(10,14,26,.65) 50%,rgba(10,14,26,.93) 100%);}
-#l-topbar{position:relative;z-index:2;height:50px;flex-shrink:0;background:rgba(10,14,26,.93);border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 20px;gap:10px;color:#fff;}
-.l-brand{font-size:15px;font-weight:700;letter-spacing:.4px;}
-.l-sub{font-size:12px;color:rgba(255,255,255,.3);}
-.l-space,.mn-space{flex:1;}
-.l-dot{width:7px;height:7px;border-radius:50%;background:#4caf50;box-shadow:0 0 7px #4caf50;animation:blink 2s infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.l-live{font-size:11px;color:#4caf50;font-weight:600;}
-#l-center{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;padding:16px;}
-.lcard{width:100%;max-width:410px;background:rgba(10,14,26,.92);border:1px solid rgba(255,255,255,.1);border-radius:6px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.8);animation:rise .4s ease both;}
-@keyframes rise{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
-.lc-head{padding:18px 22px 14px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:12px;color:#fff;}
-.lc-icon{width:38px;height:38px;border-radius:4px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.lc-title{font-size:14px;font-weight:700;}.lc-sub{font-size:11px;color:rgba(255,255,255,.33);margin-top:3px;}
-.ltabs{display:flex;border-bottom:1px solid rgba(255,255,255,.07);}
-.ltab{flex:1;padding:11px 8px;background:transparent;border:none;border-bottom:2px solid transparent;font-family:Arial,sans-serif;font-size:13px;font-weight:600;color:rgba(255,255,255,.38);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .18s;}
-.ltab:hover{color:rgba(255,255,255,.65);background:rgba(255,255,255,.03);}
-#tu.on{color:#fff;background:rgba(192,57,43,.2);border-bottom-color:#c0392b;}
-#td.on{color:#fff;background:rgba(41,128,185,.2);border-bottom-color:#2980b9;}
-.lpanel{display:none;padding:20px 22px;}.lpanel.on{display:block;}
-.lf{margin-bottom:13px;}
-.lf label{display:block;font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:5px;}
-.liw{position:relative;}
-.liw span{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;opacity:.35;pointer-events:none;}
-.lf input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:3px;padding:10px 12px 10px 32px;color:#fff;font-family:Arial,sans-serif;font-size:13px;outline:none;transition:border-color .18s;}
-.lf input:focus{border-color:rgba(255,255,255,.3);}.lf input::placeholder{color:rgba(255,255,255,.18);}
-.lbtn{width:100%;padding:11px;margin-top:4px;border:none;border-radius:3px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:7px;transition:filter .18s,transform .12s;}
-.lbtn:hover{filter:brightness(1.15);}.lbtn:active{transform:scale(.98);}
-.lbtn-red{background:#c0392b;}.lbtn-blue{background:#2980b9;}
-.lstats{display:flex;gap:7px;margin-bottom:14px;}
-.lstat{flex:1;text-align:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:3px;padding:7px 4px;}
-.lsv{font-size:17px;font-weight:700;color:#2980b9;}
-.lsl{font-size:9px;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
-.lfoot{padding:10px 22px 16px;display:flex;justify-content:center;gap:18px;}
-.lfoot a{font-size:11px;color:rgba(255,255,255,.27);text-decoration:none;}
-.lfoot a:hover{color:rgba(255,255,255,.6);}
-#l-bottombar{position:relative;z-index:2;height:62px;flex-shrink:0;background:#0c1120;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;gap:10px;padding:0 20px;}
-.lflabel{font-size:11px;font-weight:700;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.5px;margin-right:4px;}
-.lmbtn{padding:9px 18px;border:none;border-radius:3px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:default;display:flex;align-items:center;gap:7px;opacity:.55;}
-.lm-green{background:#27ae60;}.lm-blue{background:#2980b9;}
+  /* ═══════════════════════════════════════
+     LOGIN SCREEN
+  ═══════════════════════════════════════ */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #0a0e1a;
+    display: flex; flex-direction: column;
+  }
 
-/* ── SHARED NAV ──────────────────────────── */
-#map-screen,#user-screen{display:none;flex-direction:column;height:100vh;}
-#map-screen.visible,#user-screen.visible{display:flex;}
-.mn-nav{height:50px;flex-shrink:0;background:#16213e;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 16px;gap:10px;color:#fff;}
-.mn-brand{font-size:14px;font-weight:700;}
-.mn-role-depot{font-size:12px;color:#27ae60;font-weight:600;}
-.mn-role-user{font-size:12px;color:#e74c3c;font-weight:600;}
-.mn-username{font-size:12px;color:rgba(255,255,255,.5);}
-.mn-logout{font-size:12px;color:rgba(255,255,255,.4);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:3px;padding:5px 10px;cursor:pointer;transition:all .18s;}
-.mn-logout:hover{color:#fff;border-color:rgba(255,255,255,.3);}
+  /* animated map-like background */
+  #login-bg {
+    position: absolute; inset: 0;
+    background-color: #1a2332;
+    overflow: hidden;
+  }
+  #login-bg::before {
+    content:'';
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(255,200,100,0.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,200,100,0.10) 1px, transparent 1px),
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 120px 120px, 120px 120px, 30px 30px, 30px 30px;
+    animation: gridDrift 30s linear infinite;
+  }
+  @keyframes gridDrift {
+    from { background-position: 0 0,0 0,0 0,0 0; }
+    to   { background-position: 120px 120px,120px 120px,30px 30px,30px 30px; }
+  }
+  #login-bg::after {
+    content:'';
+    position:absolute; inset:0;
+    background-image:
+      radial-gradient(ellipse 200px 130px at 15% 35%, rgba(56,142,60,0.15) 0%, transparent 70%),
+      radial-gradient(ellipse 250px 160px at 80% 55%, rgba(56,142,60,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 140px 90px  at 55% 75%, rgba(33,150,243,0.10) 0%, transparent 70%),
+      radial-gradient(ellipse 100px 60px  at 70% 20%, rgba(33,150,243,0.08) 0%, transparent 70%);
+  }
+  .bg-road {
+    position:absolute; background:rgba(255,200,80,0.13);
+  }
+  .br1 { width:4px; height:200%; top:-50%; left:33%; transform:rotate(22deg); }
+  .br2 { width:3px; height:200%; top:-50%; left:62%; transform:rotate(-14deg); }
+  .br3 { width:100%; height:3px; top:42%; }
+  .br4 { width:100%; height:2px; top:68%; opacity:0.6; }
 
-/* ── DEPOT MAP ───────────────────────────── */
-#map-wrap{flex:1;position:relative;}
-#map{width:100%;height:100%;}
-#controls{height:72px;flex-shrink:0;background:#16213e;display:flex;align-items:center;justify-content:center;gap:12px;}
-.layer-btn{padding:10px 22px;border:3px solid transparent;border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold;color:white;transition:all .2s;opacity:.75;}
-#btn-road{background:#c0392b;}#btn-ndvi{background:#27ae60;}#btn-node{background:#2980b9;}
-.layer-btn.active{opacity:1;border-color:#fff;box-shadow:0 0 14px rgba(255,255,255,.45);transform:scale(1.05);}
-#raster-switcher{display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(22,33,62,.95);border:1px solid #27ae60;border-radius:30px;padding:6px 8px;gap:6px;align-items:center;}
-.rs-btn{padding:5px 14px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:bold;background:transparent;color:#aaa;transition:all .2s;}
-.rs-btn.active{background:#27ae60;color:white;}
+  #login-overlay {
+    position:absolute; inset:0;
+    background: linear-gradient(160deg,
+      rgba(10,14,26,0.5) 0%,
+      rgba(10,14,26,0.65) 50%,
+      rgba(10,14,26,0.93) 100%
+    );
+  }
 
-/* ── USER VIEW ───────────────────────────── */
-#user-body{display:flex;flex:1;overflow:hidden;}
-#user-map-wrap{flex:1;position:relative;}
-#user-map{width:100%;height:100%;}
-#user-sidebar{width:270px;flex-shrink:0;background:#0f1623;border-left:1px solid rgba(255,255,255,.07);overflow-y:auto;display:flex;flex-direction:column;}
-.us-sec{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);}
-.us-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.3);margin-bottom:10px;}
-.us-eta{background:linear-gradient(135deg,rgba(192,57,43,.15),rgba(41,128,185,.1));border:1px solid rgba(192,57,43,.25);border-radius:8px;padding:14px;}
-.eta-val{font-size:32px;font-weight:800;color:#e74c3c;line-height:1;}
-.eta-lbl{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px;}
-.eta-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:8px;}
-.us-veh{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:12px;}
-.veh-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.veh-ico{font-size:22px;}
-.veh-nm{font-size:13px;font-weight:700;color:#fff;}
-.veh-sub{font-size:11px;color:rgba(255,255,255,.35);}
-.veh-badge{margin-left:auto;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;background:rgba(255,179,0,.15);color:#ffb300;border:1px solid rgba(255,179,0,.3);}
-.veh-stats{display:flex;gap:6px;}
-.vs{flex:1;text-align:center;background:rgba(255,255,255,.03);border-radius:6px;padding:7px 4px;}
-.vs .v{font-size:15px;font-weight:700;color:#27ae60;}
-.vs .l{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-top:2px;}
-.sched{display:flex;flex-direction:column;gap:5px;}
-.stop{display:flex;align-items:center;gap:8px;padding:8px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:7px;}
-.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.d-done{background:#27ae60;}.d-next{background:#ffb300;box-shadow:0 0 5px #ffb300;animation:blink 1.5s infinite;}.d-wait{background:#444;}
-.stop-nm{font-size:12px;flex:1;color:rgba(255,255,255,.8);}
-.stop-t{font-size:10px;color:rgba(255,255,255,.35);}
-.alert{padding:9px 11px;border-radius:7px;font-size:11px;line-height:1.5;margin-bottom:6px;}
-.a-warn{background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.2);color:#ffb300;}
-.a-info{background:rgba(41,128,185,.08);border:1px solid rgba(41,128,185,.2);color:#5dade2;}
+  /* top bar */
+  #l-topbar {
+    position:relative; z-index:2;
+    height:50px; flex-shrink:0;
+    background:rgba(10,14,26,0.93);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    display:flex; align-items:center;
+    padding:0 20px; gap:10px; color:#fff;
+  }
+  .l-brand { font-size:15px; font-weight:700; letter-spacing:0.4px; }
+  .l-sub   { font-size:12px; color:rgba(255,255,255,0.3); }
+  .l-space { flex:1; }
+  .l-dot   { width:7px; height:7px; border-radius:50%; background:#4caf50; box-shadow:0 0 7px #4caf50; animation:blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  .l-live  { font-size:11px; color:#4caf50; font-weight:600; }
+
+  /* center */
+  #l-center {
+    position:relative; z-index:2;
+    flex:1; display:flex; align-items:center; justify-content:center;
+    padding:16px;
+  }
+
+  /* card */
+  .lcard {
+    width:100%; max-width:410px;
+    background:rgba(10,14,26,0.92);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:6px; overflow:hidden;
+    box-shadow:0 24px 64px rgba(0,0,0,0.8);
+    animation:rise 0.4s ease both;
+  }
+  @keyframes rise {
+    from{opacity:0;transform:translateY(16px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .lc-head {
+    padding:18px 22px 14px;
+    border-bottom:1px solid rgba(255,255,255,0.07);
+    display:flex; align-items:center; gap:12px; color:#fff;
+  }
+  .lc-icon { width:38px; height:38px; border-radius:4px; background:rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .lc-title { font-size:14px; font-weight:700; }
+  .lc-sub   { font-size:11px; color:rgba(255,255,255,0.33); margin-top:3px; }
+
+  /* tabs */
+  .ltabs { display:flex; border-bottom:1px solid rgba(255,255,255,0.07); }
+  .ltab {
+    flex:1; padding:11px 8px;
+    background:transparent; border:none; border-bottom:2px solid transparent;
+    font-family:Arial,sans-serif; font-size:13px; font-weight:600;
+    color:rgba(255,255,255,0.38); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:all 0.18s;
+  }
+  .ltab:hover { color:rgba(255,255,255,0.65); background:rgba(255,255,255,0.03); }
+  #tu.on { color:#fff; background:rgba(192,57,43,0.2);  border-bottom-color:#c0392b; }
+  #td.on { color:#fff; background:rgba(41,128,185,0.2); border-bottom-color:#2980b9; }
+
+  /* panels */
+  .lpanel { display:none; padding:20px 22px; }
+  .lpanel.on { display:block; }
+
+  /* field */
+  .lf { margin-bottom:13px; }
+  .lf label { display:block; font-size:10px; font-weight:700; letter-spacing:0.7px; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:5px; }
+  .liw { position:relative; }
+  .liw span { position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:13px; opacity:0.35; pointer-events:none; }
+  .lf input {
+    width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09);
+    border-radius:3px; padding:10px 12px 10px 32px;
+    color:#fff; font-family:Arial,sans-serif; font-size:13px;
+    outline:none; transition:border-color 0.18s;
+  }
+  .lf input:focus { border-color:rgba(255,255,255,0.3); }
+  .lf input::placeholder { color:rgba(255,255,255,0.18); }
+
+  /* login button */
+  .lbtn {
+    width:100%; padding:11px; margin-top:4px;
+    border:none; border-radius:3px;
+    font-family:Arial,sans-serif; font-size:13px; font-weight:700;
+    color:#fff; cursor:pointer; letter-spacing:0.3px;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    transition:filter 0.18s, transform 0.12s;
+  }
+  .lbtn:hover  { filter:brightness(1.15); }
+  .lbtn:active { transform:scale(0.98); }
+  .lbtn-red  { background:#c0392b; }
+  .lbtn-blue { background:#2980b9; }
+
+  /* depot stats */
+  .lstats { display:flex; gap:7px; margin-bottom:14px; }
+  .lstat  { flex:1; text-align:center; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:3px; padding:7px 4px; }
+  .lsv { font-size:17px; font-weight:700; color:#2980b9; }
+  .lsl { font-size:9px; color:rgba(255,255,255,0.28); text-transform:uppercase; letter-spacing:0.4px; margin-top:2px; }
+
+  .lfoot { padding:10px 22px 16px; display:flex; justify-content:center; gap:18px; }
+  .lfoot a { font-size:11px; color:rgba(255,255,255,0.27); text-decoration:none; }
+  .lfoot a:hover { color:rgba(255,255,255,0.6); }
+
+  /* bottom bar — matches your map */
+  #l-bottombar {
+    position:relative; z-index:2;
+    height:62px; flex-shrink:0;
+    background:#0c1120;
+    border-top:1px solid rgba(255,255,255,0.07);
+    display:flex; align-items:center; justify-content:center;
+    gap:10px; padding:0 20px;
+  }
+  .lflabel { font-size:11px; font-weight:700; color:rgba(255,255,255,0.2); text-transform:uppercase; letter-spacing:0.5px; margin-right:4px; }
+  .lmbtn { padding:9px 18px; border:none; border-radius:3px; font-family:Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; cursor:default; display:flex; align-items:center; gap:7px; opacity:0.55; }
+  .lm-red   { background:#c0392b; }
+  .lm-green { background:#27ae60; }
+  .lm-blue  { background:#2980b9; }
+
+  /* ═══════════════════════════════════════
+     MAP SCREEN (hidden until login)
+  ═══════════════════════════════════════ */
+  #map-screen {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+  }
+  #map-screen.visible {
+    display: flex;
+  }
+
+  /* top nav bar on map */
+  #map-nav {
+    height: 50px; flex-shrink:0;
+    background: #16213e;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    display:flex; align-items:center;
+    padding:0 16px; gap:10px; color:#fff;
+  }
+  .mn-brand { font-size:14px; font-weight:700; }
+  .mn-space { flex:1; }
+  .mn-user  { font-size:12px; color:rgba(255,255,255,0.5); }
+  .mn-logout {
+    font-size:12px; color:rgba(255,255,255,0.4);
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:3px; padding:5px 10px;
+    cursor:pointer; transition:all 0.18s;
+  }
+  .mn-logout:hover { color:#fff; border-color:rgba(255,255,255,0.3); }
+
+  #map { flex:1; width:100%; }
+
+  /* bottom controls — your exact style */
+  #controls {
+    height: 72px; flex-shrink:0;
+    background: #16213e;
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px;
+  }
+  .layer-btn {
+    padding: 10px 22px;
+    border: 3px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px; font-weight: bold;
+    color: white;
+    transition: all 0.2s;
+    opacity: 0.75;
+  }
+  #btn-road  { background: #c0392b; }
+  #btn-ndvi  { background: #27ae60; }
+  #btn-node  { background: #2980b9; }
+  .layer-btn.active {
+    opacity: 1;
+    border-color: #ffffff;
+    box-shadow: 0 0 14px rgba(255,255,255,0.45);
+    transform: scale(1.05);
+  }
 </style>
 </head>
 <body>
 
-<!-- ══════════ LOGIN ══════════ -->
+<!-- ═══ LOGIN SCREEN ═══ -->
 <div id="login-screen">
+
   <div id="login-bg">
-    <div class="bg-road br1"></div><div class="bg-road br2"></div>
-    <div class="bg-road br3"></div><div class="bg-road br4"></div>
+    <div class="bg-road br1"></div>
+    <div class="bg-road br2"></div>
+    <div class="bg-road br3"></div>
+    <div class="bg-road br4"></div>
   </div>
   <div id="login-overlay"></div>
+
   <div id="l-topbar">
-    <span class="l-brand">&#9851; WasteTrack</span>
-    <span class="l-sub">Whitefield Waste Management &middot; Bengaluru</span>
+    <span class="l-brand">♻️ WasteTrack</span>
+    <span class="l-sub">Whitefield Waste Management · Bengaluru</span>
     <div class="l-space"></div>
     <div class="l-dot"></div>
     <span class="l-live">LIVE</span>
   </div>
+
   <div id="l-center">
     <div class="lcard">
+
       <div class="lc-head">
-        <div class="lc-icon">&#128506;</div>
+        <div class="lc-icon">🗺️</div>
         <div>
           <div class="lc-title">Route Optimization System</div>
           <div class="lc-sub">Real-time Fleet &amp; Waste Collection Tracking</div>
         </div>
       </div>
+
       <div class="ltabs">
-        <button class="ltab on" id="tu" onclick="swTab('user')">&#128667; User &#8212; Track Vehicle</button>
-        <button class="ltab" id="td" onclick="swTab('depot')">&#127981; Depot Dashboard</button>
+        <button class="ltab on" id="tu" onclick="swTab('user')">🚛 User — Track Vehicle</button>
+        <button class="ltab"    id="td" onclick="swTab('depot')">🏭 Depot Dashboard</button>
       </div>
 
       <!-- USER PANEL -->
       <div class="lpanel on" id="pu">
         <div class="lf">
           <label>Mobile / Email</label>
-          <div class="liw"><span>&#128241;</span><input type="text" id="u-email" placeholder="Enter mobile number or email"/></div>
+          <div class="liw"><span>📱</span><input type="text" id="u-email" placeholder="Enter mobile number or email"/></div>
         </div>
         <div class="lf">
           <label>Password</label>
-          <div class="liw"><span>&#128274;</span><input type="password" id="u-pass" placeholder="Enter password"/></div>
+          <div class="liw"><span>🔒</span><input type="password" id="u-pass" placeholder="Enter password"/></div>
         </div>
         <div class="lf">
           <label>Your Zone / Area</label>
-          <div class="liw"><span>&#128205;</span><input type="text" id="u-zone" placeholder="e.g. Whitefield Zone A"/></div>
+          <div class="liw"><span>📍</span><input type="text" id="u-zone" placeholder="e.g. Whitefield Zone A"/></div>
         </div>
-        <button class="lbtn lbtn-red" onclick="doLogin('user')">&#128667; Track My Vehicle</button>
+        <button class="lbtn lbtn-red" onclick="doLogin('user')">🚛 Track My Vehicle</button>
       </div>
 
       <!-- DEPOT PANEL -->
@@ -174,13 +307,13 @@ html,body{height:100%;font-family:Arial,sans-serif;overflow:hidden;background:#0
         </div>
         <div class="lf">
           <label>Depot / Staff ID</label>
-          <div class="liw"><span>&#128282;</span><input type="text" id="d-id" placeholder="e.g. WF-DEPOT-01"/></div>
+          <div class="liw"><span>🪪</span><input type="text" id="d-id" placeholder="e.g. WF-DEPOT-01"/></div>
         </div>
         <div class="lf">
           <label>Password</label>
-          <div class="liw"><span>&#128274;</span><input type="password" id="d-pass" placeholder="Enter depot password"/></div>
+          <div class="liw"><span>🔒</span><input type="password" id="d-pass" placeholder="Enter depot password"/></div>
         </div>
-        <button class="lbtn lbtn-blue" onclick="doLogin('depot')">&#127981; Open Depot Dashboard</button>
+        <button class="lbtn lbtn-blue" onclick="doLogin('depot')">🏭 Open Depot Dashboard</button>
       </div>
 
       <div class="lfoot">
@@ -188,116 +321,14 @@ html,body{height:100%;font-family:Arial,sans-serif;overflow:hidden;background:#0
         <a href="#">Register area</a>
         <a href="#">Contact admin</a>
       </div>
-    </div>
-  </div>
-  <div id="l-bottombar">
-    <span class="lflabel">Features</span>
-    <div class="lmbtn lm-green">&#127807; Area Covered</div>
-    <div class="lmbtn lm-blue">&#128205; Node Mapping</div>
-  </div>
-</div>
-
-
-<!-- ══════════ DEPOT MAP SCREEN ══════════ -->
-<div id="map-screen">
-  <div class="mn-nav">
-    <span class="mn-brand">&#9851; WasteTrack</span>
-    <span class="mn-role-depot">&#127981; Depot Dashboard</span>
-    <div class="mn-space"></div>
-    <span class="mn-username" id="depot-name"></span>
-    <button class="mn-logout" onclick="doLogout()">&#8592; Logout</button>
-  </div>
-  <div id="map-wrap">
-    <div id="map"></div>
-    <div id="raster-switcher">
-      <button class="rs-btn active" onclick="switchRaster(0,this)">&#128752; NDVI</button>
-      <button class="rs-btn" onclick="switchRaster(1,this)">&#128506; Land Use</button>
-      <button class="rs-btn" onclick="switchRaster(2,this)">&#128225; Whitefield SD</button>
-    </div>
-  </div>
-  <div id="controls">
-    <button class="layer-btn" id="btn-road">&#128663; Road Network Analysis</button>
-    <button class="layer-btn" id="btn-ndvi">&#127807; NDVI Vegetation Analysis</button>
-    <button class="layer-btn" id="btn-node">&#128205; Node Mapping</button>
-  </div>
-</div>
-
-
-<!-- ══════════ USER TRACKING SCREEN ══════════ -->
-<div id="user-screen">
-  <div class="mn-nav">
-    <span class="mn-brand">&#9851; WasteTrack</span>
-    <span class="mn-role-user">&#128667; My Zone Tracker</span>
-    <div class="mn-space"></div>
-    <span class="mn-username" id="user-name"></span>
-    <button class="mn-logout" onclick="doLogout()">&#8592; Logout</button>
-  </div>
-  <div id="user-body">
-
-    <!-- restricted map: depot zone only, no layer controls -->
-    <div id="user-map-wrap">
-      <div id="user-map"></div>
-    </div>
-
-    <!-- tracking sidebar -->
-    <div id="user-sidebar">
-
-      <div class="us-sec">
-        <div class="us-lbl">&#9201; Next Pickup ETA</div>
-        <div class="us-eta">
-          <div class="eta-val">18 <span style="font-size:14px;color:rgba(255,255,255,.4)">min</span></div>
-          <div class="eta-lbl">Estimated arrival at your stop</div>
-          <div class="eta-sub">&#128667; WF-VH-04 &nbsp;&#183;&nbsp; 1.4 km away</div>
-        </div>
-      </div>
-
-      <div class="us-sec">
-        <div class="us-lbl">&#128667; Assigned Vehicle</div>
-        <div class="us-veh">
-          <div class="veh-row">
-            <div class="veh-ico">&#128666;</div>
-            <div>
-              <div class="veh-nm">WF-VH-04</div>
-              <div class="veh-sub">Driver: Rajan K. &middot; KA-05-AB-1234</div>
-            </div>
-            <div class="veh-badge">En Route</div>
-          </div>
-          <div class="veh-stats">
-            <div class="vs"><div class="v">62%</div><div class="l">Load</div></div>
-            <div class="vs"><div class="v">14</div><div class="l">Stops</div></div>
-            <div class="vs"><div class="v">8.2km</div><div class="l">Done</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="us-sec">
-        <div class="us-lbl">&#128197; Today's Schedule</div>
-        <div class="sched">
-          <div class="stop"><div class="dot d-done"></div><div class="stop-nm">Kadugodi Stop</div><div class="stop-t">7:30 &#10003;</div></div>
-          <div class="stop"><div class="dot d-done"></div><div class="stop-nm">Pattanduru Agrahara</div><div class="stop-t">8:15 &#10003;</div></div>
-          <div class="stop"><div class="dot d-next"></div><div class="stop-nm">Whitefield Main Rd</div><div class="stop-t">~9:10</div></div>
-          <div class="stop"><div class="dot d-wait"></div><div class="stop-nm">Kaolin Hill</div><div class="stop-t">~9:45</div></div>
-          <div class="stop"><div class="dot d-wait"></div><div class="stop-nm">Channasandra</div><div class="stop-t">~10:30</div></div>
-        </div>
-      </div>
-
-      <div class="us-sec">
-        <div class="us-lbl">&#128276; Alerts</div>
-        <div class="alert a-warn">&#9888; Vehicle 12 min late &mdash; traffic on ITPL Road</div>
-        <div class="alert a-info">&#8505; Next: Tomorrow 8:00 AM (dry waste)</div>
-      </div>
 
     </div>
   </div>
-<<<<<<< HEAD
-</div>
-=======
 
   <div id="l-bottombar">
     <span class="lflabel">Features</span>
     <div class="lmbtn lm-green">🌿 Area Covered</div>
     <div class="lmbtn lm-blue">📍 Node Mapping</div>
-    <a href="wf.html">Green field</a>
     <a href="wf.html" style="text-decoration:none;">
       <div class="lmbtn" style="background:#1e8449;opacity:1;cursor:pointer;box-shadow:0 0 10px rgba(39,174,96,0.5);animation:glow 2s infinite alternate;">🌿 Green Zone Skip Route Optimizer</div>
     </a>
@@ -340,229 +371,145 @@ html,body{height:100%;font-family:Arial,sans-serif;overflow:hidden;background:#0
   </style>
 
 </div><!-- /map-screen -->
->>>>>>> 01a647a3e6ae0dc7d862da9a01eec31ea3ef8ff7
 
 
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 <script>
-(function(){
 
-  var depotMap = null, userMap = null;
-  var rasters = [], depotReady = false, userReady = false;
-  var RB = [[12.974269,77.731238],[13.016096,77.778518]];
+  // ── TAB SWITCH ─────────────────────────────────────────────
+  function swTab(role) {
+    ['pu','pd'].forEach(id => document.getElementById(id).classList.remove('on'));
+    ['tu','td'].forEach(id => document.getElementById(id).classList.remove('on'));
+    document.getElementById(role === 'user' ? 'pu' : 'pd').classList.add('on');
+    document.getElementById(role === 'user' ? 'tu' : 'td').classList.add('on');
+  }
 
-  // Depot zone bounds — user is locked to this area
-  var DEPOT_BOUNDS = [[12.975, 77.730],[13.010, 77.780]];
-
-  // ── TAB SWITCH ───────────────────────────
-  window.swTab = function(r){
-    ['pu','pd','tu','td'].forEach(function(i){ document.getElementById(i).classList.remove('on'); });
-    document.getElementById(r==='user'?'pu':'pd').classList.add('on');
-    document.getElementById(r==='user'?'tu':'td').classList.add('on');
-  };
-
-  // ── LOGIN ────────────────────────────────
-  window.doLogin = function(role){
-    var name = role==='user'
+  // ── LOGIN ──────────────────────────────────────────────────
+  function doLogin(role) {
+    // grab whatever was typed (no real auth — just show the map)
+    var name = role === 'user'
       ? (document.getElementById('u-email').value || 'Resident')
-      : (document.getElementById('d-id').value || 'Depot Staff');
+      : (document.getElementById('d-id').value   || 'Depot Staff');
 
+    // update nav bar
+    document.getElementById('nav-user').textContent = '👤 ' + name;
+    document.getElementById('nav-role').textContent = role === 'user' ? '🚛 User' : '🏭 Depot';
+
+    // hide login, show map
     document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('map-screen').classList.add('visible');
 
-    if(role === 'depot'){
-      document.getElementById('depot-name').textContent = name;
-      document.getElementById('map-screen').classList.add('visible');
-      setTimeout(function(){ initDepotMap(); }, 50);
-    } else {
-      document.getElementById('user-name').textContent = name;
-      document.getElementById('user-screen').classList.add('visible');
-      setTimeout(function(){ initUserMap(); }, 50);
-    }
-  };
+    // init map AFTER it's visible (fixes Leaflet sizing bug)
+    initMap();
+  }
 
-  // ── LOGOUT ───────────────────────────────
-  window.doLogout = function(){
+  // ── LOGOUT ─────────────────────────────────────────────────
+  function doLogout() {
     document.getElementById('map-screen').classList.remove('visible');
-    document.getElementById('user-screen').classList.remove('visible');
     document.getElementById('login-screen').style.display = 'flex';
-  };
+  }
 
-  // ── RASTER SWITCH (depot only) ───────────
-  window.switchRaster = function(i, b){
-    if(!depotMap) return;
-    rasters.forEach(function(l){ depotMap.removeLayer(l); });
-    document.querySelectorAll('.rs-btn').forEach(function(x){ x.classList.remove('active'); });
-    rasters[i].addTo(depotMap);
-    b.classList.add('active');
-  };
+  // ── MAP INIT ───────────────────────────────────────────────
+  var mapReady = false;
 
-  // ════════════════════════════════════════
-  // DEPOT MAP — full access, all layers
-  // ════════════════════════════════════════
-  function initDepotMap(){
-    if(depotReady){ depotMap.invalidateSize(); return; }
-    depotReady = true;
+  function initMap() {
+    if (mapReady) return;
+    mapReady = true;
 
-    depotMap = L.map('map').setView([12.9835,77.7427],13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap',maxZoom:19}).addTo(depotMap);
+    var map = L.map('map').setView([12.9835, 77.7427], 13);
 
-    rasters = [
-      L.imageOverlay('data/ndvi.png', RB, {opacity:.7}),
-      L.imageOverlay('data/landuse.png', RB, {opacity:.7}),
-      L.imageOverlay('data/whitefield_sd.png', RB, {opacity:.7})
-    ];
-    document.getElementById('raster-switcher').style.display = 'flex';
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-    var g = {
-      road: L.layerGroup().addTo(depotMap),
-      ndvi: L.layerGroup().addTo(depotMap),
-      node: L.layerGroup().addTo(depotMap)
+    // layer groups
+    var groups = {
+      road: L.layerGroup().addTo(map),
+      ndvi: L.layerGroup().addTo(map),
+      node: L.layerGroup().addTo(map)
     };
-    var ds = {
-      road:{color:'#e74c3c',weight:2.5,opacity:.8},
-      ndvi:{color:'#27ae60',weight:1.5,fillColor:'#2ecc71',fillOpacity:.35},
-      node:{color:'#2980b9',weight:2,opacity:.8}
-    };
-    var hs = {
-      road:{color:'#ff0000',weight:4.5,opacity:1},
-      ndvi:{color:'#00ff00',weight:3,opacity:1,fillOpacity:.6},
-      node:{color:'#00aaff',weight:4,opacity:1}
-    };
-    var ptD = {radius:6,fillColor:'#3498db',color:'#fff',weight:1,fillOpacity:.85};
-    var ptH = {radius:9,fillColor:'#00aaff',color:'#fff',weight:2,fillOpacity:1};
 
-    function loadFile(url, key){
+    var defaultStyles = {
+      road: { color:'#e74c3c', weight:2.5, opacity:0.8, fillOpacity:0.3 },
+      ndvi: { color:'#27ae60', weight:1.5, fillColor:'#2ecc71', fillOpacity:0.35 },
+      node: { color:'#2980b9', weight:2, opacity:0.8 }
+    };
+    var highlightStyles = {
+      road: { color:'#ff0000', weight:4.5, opacity:1 },
+      ndvi: { color:'#00ff00', weight:3, opacity:1, fillOpacity:0.6 },
+      node: { color:'#00aaff', weight:4, opacity:1 }
+    };
+    var pointStyles = {
+      def:  { radius:6,  fillColor:'#3498db', color:'#fff', weight:1, fillOpacity:0.85 },
+      high: { radius:9,  fillColor:'#00aaff', color:'#fff', weight:2, fillOpacity:1 }
+    };
+
+    function clean(data) { delete data.crs; return data; }
+
+    function loadIntoGroup(url, key) {
       fetch(url)
-        .then(function(r){ if(!r.ok) throw r.status; return r.json(); })
-        .then(function(d){
-          delete d.crs;
-          g[key].addLayer(L.geoJSON(d,{
-            style: ds[key],
-            pointToLayer: function(f,ll){ return L.circleMarker(ll,ptD); },
-            onEachFeature: function(f,l){ var p=f.properties; if(p) l.bindPopup(String(p.name||p.id||p.NAME||'')); }
-          }));
+        .then(r => { if(!r.ok) throw new Error('404: '+url); return r.json(); })
+        .then(data => {
+          data = clean(data);
+          var layer = L.geoJSON(data, {
+            style: defaultStyles[key],
+            pointToLayer: function(f, ll) { return L.circleMarker(ll, pointStyles.def); },
+            onEachFeature: function(f, l) {
+              var p = f.properties;
+              if(p) l.bindPopup(String(p.name||p.id||p.NAME||JSON.stringify(p)));
+            }
+          });
+          groups[key].addLayer(layer);
+          console.log('✅ Loaded:', url);
         })
-        .catch(function(){ console.warn('skip:',url); });
+        .catch(e => console.error('❌', e.message));
     }
 
+    // load your actual files
     ['data/whitefield_line.geojson','data/whitefield_line2.geojson',
      'data/whitefield_line3.geojson','data/whitefield_line4.geojson',
-     'data/whitefield_line5.geojson'].forEach(function(f){ loadFile(f,'road'); });
-    loadFile('data/whitefield.geojson','ndvi');
-    ['data/loc1.geojson','data/depot.geojson','data/deport_point.geojson'].forEach(function(f){ loadFile(f,'node'); });
+     'data/whitefield_line5.geojson'].forEach(f => loadIntoGroup(f,'road'));
 
-    var ak = null;
-    function hl(k,on){
-      g[k].eachLayer(function(gl){
-        if(gl.setStyle) gl.setStyle(on?hs[k]:ds[k]);
-        if(gl.eachLayer) gl.eachLayer(function(i){ if(i.setStyle) i.setStyle(on?ptH:ptD); });
+    loadIntoGroup('data/whitefield.geojson','ndvi');
+
+    ['data/loc1.geojson','data/depot.geojson',
+     'data/deport_point.geojson'].forEach(f => loadIntoGroup(f,'node'));
+
+    // button highlight logic
+    var activeKey = null;
+
+    function setHighlight(key, on) {
+      groups[key].eachLayer(function(gl) {
+        if(gl.setStyle) gl.setStyle(on ? highlightStyles[key] : defaultStyles[key]);
+        gl.eachLayer && gl.eachLayer(function(inner) {
+          if(inner.setStyle) inner.setStyle(on ? pointStyles.high : pointStyles.def);
+        });
       });
     }
-    function hb(k,b){
-      if(ak===k){ hl(k,false); b.classList.remove('active'); ak=null; return; }
-      if(ak){ hl(ak,false); document.querySelectorAll('.layer-btn').forEach(function(x){ x.classList.remove('active'); }); }
-      hl(k,true); b.classList.add('active'); ak=k;
+
+    function handleBtn(key, btn) {
+      if(activeKey === key) {
+        setHighlight(key, false);
+        btn.classList.remove('active');
+        activeKey = null; return;
+      }
+      if(activeKey) {
+        setHighlight(activeKey, false);
+        document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+      }
+      setHighlight(key, true);
+      btn.classList.add('active');
+      activeKey = key;
     }
-    document.getElementById('btn-road').onclick = function(){ hb('road',this); };
-    document.getElementById('btn-ndvi').onclick = function(){ hb('ndvi',this); };
-    document.getElementById('btn-node').onclick = function(){ hb('node',this); };
 
-    setTimeout(function(){ depotMap.invalidateSize(); }, 150);
+   
+    document.getElementById('btn-ndvi').onclick = function(){ handleBtn('ndvi',this); };
+    document.getElementById('btn-node').onclick = function(){ handleBtn('node',this); };
+
+    // fix map size after being shown
+    setTimeout(function(){ map.invalidateSize(); }, 100);
   }
 
-  // ════════════════════════════════════════
-  // USER MAP — restricted to depot zone only
-  // no layer controls, no raster switcher
-  // shows: depot location + assigned vehicle route only
-  // ════════════════════════════════════════
-  function initUserMap(){
-    if(userReady){ userMap.invalidateSize(); return; }
-    userReady = true;
-
-    // locked to depot zone — user cannot pan outside
-    userMap = L.map('user-map', {
-      center: [12.9835, 77.7427],
-      zoom: 14,
-      minZoom: 13,
-      maxZoom: 17,
-      maxBounds: DEPOT_BOUNDS,
-      maxBoundsViscosity: 1.0   // hard lock — cannot drag outside
-    });
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      attribution:'OpenStreetMap', maxZoom:17
-    }).addTo(userMap);
-
-    // ── shade areas OUTSIDE the depot zone ──
-    // full world rectangle minus depot zone = greyed out
-    var world = [[-90,-180],[-90,180],[90,180],[90,-180]];
-    var hole  = [
-      [DEPOT_BOUNDS[0][0], DEPOT_BOUNDS[0][1]],
-      [DEPOT_BOUNDS[0][0], DEPOT_BOUNDS[1][1]],
-      [DEPOT_BOUNDS[1][0], DEPOT_BOUNDS[1][1]],
-      [DEPOT_BOUNDS[1][0], DEPOT_BOUNDS[0][1]]
-    ];
-    L.polygon([world, hole], {
-      color: 'none',
-      fillColor: '#0a0e1a',
-      fillOpacity: 0.65,
-      interactive: false
-    }).addTo(userMap);
-
-    // ── depot location marker ──
-    L.marker([12.9835, 77.7427], {
-      icon: L.divIcon({
-        className:'',
-        html:'<div style="font-size:26px;filter:drop-shadow(0 2px 6px rgba(192,57,43,0.8))">&#127981;</div>',
-        iconAnchor:[13,13]
-      })
-    }).bindPopup('<b>WF Main Depot</b><br>Whitefield').addTo(userMap);
-
-    // ── vehicle route (only their zone) ──
-    var route = [
-      [12.9990,77.7180],[12.9960,77.7250],[12.9930,77.7300],
-      [12.9900,77.7350],[12.9860,77.7400],[12.9840,77.7430]
-    ];
-    L.polyline(route,{color:'#e74c3c',weight:4,opacity:.8,dashArray:'8,4'}).addTo(userMap);
-
-    // ── stops ──
-    var stops = [
-      {pos:[12.9990,77.7180],name:'Kadugodi Stop',done:true},
-      {pos:[12.9930,77.7300],name:'Pattanduru Agrahara',done:true},
-      {pos:[12.9860,77.7400],name:'Whitefield Main Rd',done:false,next:true},
-      {pos:[12.9840,77.7430],name:'Kaolin Hill',done:false},
-      {pos:[12.9800,77.7480],name:'Channasandra',done:false}
-    ];
-    stops.forEach(function(s){
-      var col = s.done?'#27ae60':s.next?'#ffb300':'#555';
-      L.circleMarker(s.pos,{radius:8,fillColor:col,color:'#fff',weight:2,fillOpacity:1})
-       .bindPopup('<b>'+s.name+'</b><br>'+(s.done?'Collected':s.next?'Next Stop':'Pending'))
-       .addTo(userMap);
-    });
-
-    // ── user location ──
-    L.circleMarker([12.9840,77.7430],{radius:11,fillColor:'#2980b9',color:'#fff',weight:3,fillOpacity:.9})
-     .bindPopup('<b>Your Location</b>').addTo(userMap);
-
-    // ── animated vehicle marker ──
-    var vehIdx = 0;
-    var vehMarker = L.marker(route[0],{
-      icon:L.divIcon({
-        className:'',
-        html:'<div style="font-size:24px;filter:drop-shadow(0 2px 5px rgba(255,100,0,.7))">&#128667;</div>',
-        iconAnchor:[12,12]
-      })
-    }).bindPopup('<b>WF-VH-04</b><br>En Route').addTo(userMap);
-
-    setInterval(function(){
-      vehIdx = (vehIdx+1) % route.length;
-      vehMarker.setLatLng(route[vehIdx]);
-    }, 2500);
-
-    setTimeout(function(){ userMap.invalidateSize(); }, 150);
-  }
-
-})();
 </script>
 </body>
 </html>
