@@ -297,6 +297,7 @@ html,body{height:100%;font-family:Arial,sans-serif;overflow:hidden;background:#0
     <span class="lflabel">Features</span>
     <div class="lmbtn lm-green">🌿 Area Covered</div>
     <div class="lmbtn lm-blue">📍 Node Mapping</div>
+    <a href="wf.html">Green field</a>
     <a href="wf.html" style="text-decoration:none;">
       <div class="lmbtn" style="background:#1e8449;opacity:1;cursor:pointer;box-shadow:0 0 10px rgba(39,174,96,0.5);animation:glow 2s infinite alternate;">🌿 Green Zone Skip Route Optimizer</div>
     </a>
@@ -477,7 +478,7 @@ html,body{height:100%;font-family:Arial,sans-serif;overflow:hidden;background:#0
   function initUserMap(){
     if(userReady){ userMap.invalidateSize(); return; }
     userReady = true;
-    
+
     // locked to depot zone — user cannot pan outside
     userMap = L.map('user-map', {
       center: [12.9835, 77.7427],
