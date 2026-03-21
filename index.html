@@ -3,11 +3,9 @@
 <head>
   <title>Geo Dashboard</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
-  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; background: #1a1a2e; }
-
     #map { height: calc(100vh - 80px); width: 100%; }
 
     #controls {
@@ -17,33 +15,34 @@
       align-items: center;
       justify-content: center;
       gap: 12px;
-      padding: 0 20px;
     }
 
     .layer-btn {
       padding: 10px 20px;
-      border: 2px solid transparent;
+      border: 3px solid transparent;
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
       font-weight: bold;
       color: white;
       transition: all 0.2s;
+      opacity: 0.75;
     }
+    #btn-road { background: #c0392b; }
+    #btn-ndvi { background: #27ae60; }
+    #btn-node { background: #2980b9; }
 
-    #btn-road    { background: #c0392b; }
-    #btn-ndvi    { background: #27ae60; }
-    #btn-node    { background: #2980b9; }
-
-    .layer-btn:hover  { opacity: 0.85; }
-    .layer-btn.active { border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.4); }
+    .layer-btn.active {
+      opacity: 1;
+      border-color: #ffffff;
+      box-shadow: 0 0 12px rgba(255,255,255,0.5);
+      transform: scale(1.05);
+    }
   </style>
 </head>
 
 <body>
-
   <div id="map"></div>
-
   <div id="controls">
     <button class="layer-btn" id="btn-road">🚗 Road Network Analysis</button>
     <button class="layer-btn" id="btn-ndvi">🌿 NDVI Vegetation Analysis</button>
@@ -61,155 +60,143 @@
     }).addTo(map);
 
 
-    // ── LAYER CONFIG — update filenames here if needed ─────────
-    const layerConfig = {
-      road: {
-        // whitefield_line files are your road/line layers
-        files: [
-          'data/whitefield_line.geojson——whitefield.geojson',
-          'data/whitefield_line2.geojson——whitefield.geojson',
-          'data/whitefield_line3.geojson——whitefield.geojson',
-          'data/whitefield_line4.geojson——whitefield.geojson',
-          'data/whitefield_line5.geojson——whitefield.geojson'
-        ],
-        style: { color: '#e74c3c', weight: 2.5, opacity: 0.9 }
-      },
-      ndvi: {
-        // whitefield polygon = vegetation/area layer
-        files: ['data/whitefield.geojson'],
-        style: { color: '#27ae60', weight: 1.5, fillColor: '#2ecc71', fillOpacity: 0.35 }
-      },
-      node: {
-        // loc1 = delivery/stop points, depot = depot point
-        files: [
-          'data/loc1.geojson',
-          'data/depot.geojson',
-          'data/deport_point.geojson'
-        ],
-        style: { color: '#2980b9', weight: 2 },
-        pointStyle: { radius: 6, fillColor: '#3498db', color: '#fff', weight: 1, fillOpacity: 0.9 }
-      }
+    // ── LAYER GROUPS (one per button) ──────────────────────────
+    const groups = {
+      road: L.layerGroup().addTo(map),
+      ndvi: L.layerGroup().addTo(map),
+      node: L.layerGroup().addTo(map)
+    };
+
+    // ── DEFAULT STYLES ─────────────────────────────────────────
+    const defaultStyles = {
+      road: { color: '#e74c3c', weight: 2.5, opacity: 0.8, fillOpacity: 0.3 },
+      ndvi: { color: '#27ae60', weight: 1.5, fillColor: '#2ecc71', fillOpacity: 0.35 },
+      node: { color: '#2980b9', weight: 2, opacity: 0.8 }
+    };
+
+    // ── HIGHLIGHTED STYLES (when button is active) ─────────────
+    const highlightStyles = {
+      road: { color: '#ff0000', weight: 4.5, opacity: 1 },
+      ndvi: { color: '#00ff00', weight: 3,   opacity: 1, fillOpacity: 0.6 },
+      node: { color: '#00aaff', weight: 4,   opacity: 1 }
+    };
+
+    // ── POINT STYLES ───────────────────────────────────────────
+    const pointStyles = {
+      default: { radius: 6,  fillColor: '#3498db', color: '#fff', weight: 1, fillOpacity: 0.85 },
+      highlight:{ radius: 9, fillColor: '#00aaff', color: '#fff', weight: 2, fillOpacity: 1    }
     };
 
 
-    // ── STATE ──────────────────────────────────────────────────
-    let activeGroup  = null;   // currently visible L.layerGroup
-    let activeKey    = null;   // 'road' | 'ndvi' | 'node'
-    const cache      = {};     // loaded layers stored here
-
-
-    // ── STRIP CRS (fixes QGIS export issue) ────────────────────
-    function cleanGeoJSON(data) {
-      delete data.crs;          // Leaflet doesn't support crs property
+    // ── STRIP CRS (QGIS export fix) ────────────────────────────
+    function clean(data) {
+      delete data.crs;
       return data;
     }
 
 
-    // ── LOAD ONE FILE → returns Promise<L.GeoJSON> ─────────────
-    function loadFile(key, url) {
-      return fetch(url)
+    // ── LOAD GEOJSON INTO A GROUP ──────────────────────────────
+    function loadIntoGroup(url, groupKey) {
+      fetch(url)
         .then(res => {
-          if (!res.ok) throw new Error(`Cannot load ${url}`);
+          if (!res.ok) throw new Error(`404: ${url}`);
           return res.json();
         })
         .then(data => {
-          data = cleanGeoJSON(data);
-          const cfg = layerConfig[key];
+          data = clean(data);
+          const style = defaultStyles[groupKey];
 
-          return L.geoJSON(data, {
-            style: cfg.style,
+          const layer = L.geoJSON(data, {
+            style: style,
 
-            // For point features (loc1, depot)
             pointToLayer: function(feature, latlng) {
-              return L.circleMarker(latlng, cfg.pointStyle || {
-                radius: 6, fillColor: '#e74c3c',
-                color: '#fff', weight: 1, fillOpacity: 0.9
-              });
+              return L.circleMarker(latlng, pointStyles.default);
             },
 
-            // Popup showing feature id if available
             onEachFeature: function(feature, layer) {
-              if (feature.properties && feature.properties.id) {
-                layer.bindPopup('ID: ' + feature.properties.id);
+              const props = feature.properties;
+              if (props) {
+                const label = props.name || props.id || props.NAME || JSON.stringify(props);
+                layer.bindPopup(String(label));
               }
             }
           });
-        });
-    }
 
-
-    // ── SWITCH LAYER ───────────────────────────────────────────
-    function switchLayer(key, btn) {
-
-      // Toggle off if same button clicked again
-      if (activeKey === key) {
-        if (activeGroup) map.removeLayer(activeGroup);
-        activeGroup = null;
-        activeKey   = null;
-        btn.classList.remove('active');
-        return;
-      }
-
-      // Remove previous layer
-      if (activeGroup) map.removeLayer(activeGroup);
-      document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      // Use cached layer group if already loaded
-      if (cache[key]) {
-        cache[key].addTo(map);
-        activeGroup = cache[key];
-        activeKey   = key;
-        return;
-      }
-
-      // Load all files for this key, group them
-      btn.textContent = '⏳ Loading...';
-
-      const promises = layerConfig[key].files.map(url => loadFile(key, url));
-
-      Promise.all(promises)
-        .then(layers => {
-          const group = L.layerGroup(layers);
-          cache[key]  = group;
-          group.addTo(map);
-          activeGroup = group;
-          activeKey   = key;
-
-          // Restore button label
-          const labels = {
-            road: '🚗 Road Network Analysis',
-            ndvi: '🌿 NDVI Vegetation Analysis',
-            node: '📍 Node Mapping'
-          };
-          btn.textContent = labels[key];
+          groups[groupKey].addLayer(layer);
+          console.log(`✅ Loaded: ${url}`);
         })
-        .catch(err => {
-          console.error(err);
-          btn.textContent = '❌ Load Failed';
-          setTimeout(() => {
-            const labels = {
-              road: '🚗 Road Network Analysis',
-              ndvi: '🌿 NDVI Vegetation Analysis',
-              node: '📍 Node Mapping'
-            };
-            btn.textContent = labels[key];
-          }, 2000);
-        });
+        .catch(err => console.error(`❌ Failed: ${err.message}`));
     }
 
 
+    // ── LOAD ALL LAYERS ON PAGE LOAD ───────────────────────────
+    // Road lines
+    ['data/whitefield_line.geojson',
+     'data/whitefield_line2.geojson',
+     'data/whitefield_line3.geojson',
+     'data/whitefield_line4.geojson',
+     'data/whitefield_line5.geojson'
+    ].forEach(f => loadIntoGroup(f, 'road'));
+
+    // NDVI / Area polygon
+    loadIntoGroup('data/whitefield.geojson', 'ndvi');
+
+    // Nodes / Points
+    ['data/loc1.geojson',
+     'data/depot.geojson',
+     'data/deport_point.geojson'
+    ].forEach(f => loadIntoGroup(f, 'node'));
+
+
+    // ── HIGHLIGHT ON BUTTON CLICK ──────────────────────────────
+    let activeKey = null;
+
+    function setHighlight(key, on) {
+      groups[key].eachLayer(function(geoLayer) {
+        // geoLayer is the L.geoJSON inside the group
+        if (geoLayer.setStyle) {
+          geoLayer.setStyle(on ? highlightStyles[key] : defaultStyles[key]);
+        }
+        // for circleMarkers (points)
+        geoLayer.eachLayer && geoLayer.eachLayer(function(inner) {
+          if (inner.setStyle) {
+            inner.setStyle(on ? pointStyles.highlight : pointStyles.default);
+          }
+        });
+      });
+    }
+
+    function handleBtn(key, btn) {
+      // If same button clicked again → unhighlight
+      if (activeKey === key) {
+        setHighlight(key, false);
+        btn.classList.remove('active');
+        activeKey = null;
+        return;
+      }
+
+      // Unhighlight previous
+      if (activeKey) {
+        setHighlight(activeKey, false);
+        document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+      }
+
+      // Highlight new
+      setHighlight(key, true);
+      btn.classList.add('active');
+      activeKey = key;
+    }
 
     document.getElementById('btn-road').addEventListener('click', function() {
-  console.log('Button clicked');
-  fetch('data/whitefield.geojson')
-    .then(r => {
-      console.log('Fetch status:', r.status);
-      return r.json();
-    })
-    .then(d => console.log('Data loaded:', d))
-    .catch(e => console.error('ERROR:', e));
-});
+      handleBtn('road', this);
+    });
+    document.getElementById('btn-ndvi').addEventListener('click', function() {
+      handleBtn('ndvi', this);
+    });
+    document.getElementById('btn-node').addEventListener('click', function() {
+      handleBtn('node', this);
+    });
+
   </script>
 </body>
 </html>
