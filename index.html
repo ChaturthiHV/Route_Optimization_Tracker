@@ -1,46 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>QGIS Data</title>
+  <title>QGIS Data Viewer</title>
   <style>
     body { font-family: Arial; padding: 20px; background: #f9f9f9; }
-    h2 { color: #333; }
-    table { border-collapse: collapse; width: 100%; background: white; }
+    h1 { color: #333; }
+    h2 { color: #555; margin-top: 40px; border-left: 4px solid #4CAF50; padding-left: 10px; }
+    table { border-collapse: collapse; width: 100%; background: white; margin-bottom: 30px; }
     th { background: #4CAF50; color: white; padding: 10px; text-align: left; }
     td { border: 1px solid #ddd; padding: 8px; }
     tr:nth-child(even) { background: #f2f2f2; }
     tr:hover { background: #dff0d8; }
+    .error { color: red; }
+    .loading { color: gray; font-style: italic; }
   </style>
 </head>
 <body>
-  <h2>QGIS Data Viewer</h2>
-  <div id="output">Loading data...</div>
+  <h1>QGIS Data Viewer</h1>
+
+  <h2>Depot</h2>
+  <div id="depot">Loading...</div>
+
+  <h2>Whitefield Line 1</h2>
+  <div id="whitefield_line">Loading...</div>
+
+  <h2>Whitefield Line 2</h2>
+  <div id="whitefield_line2">Loading...</div>
+
+  <h2>Whitefield Line 3</h2>
+  <div id="whitefield_line3">Loading...</div>
+
+  <h2>Whitefield Line 4</h2>
+  <div id="whitefield_line4">Loading...</div>
+
+  <h2>Whitefield Line 5</h2>
+  <div id="whitefield_line5">Loading...</div>
+
+  <h2>Whitefield SD</h2>
+  <div id="whitefield_sd">Loading...</div>
+
+  <h2>Loc1</h2>
+  <div id="loc1">Loading...</div>
 
   <script>
-    fetch('data.geojson')
-      .then(res => res.json())
-      .then(data => {
-        const features = data.features;
-        if (!features.length) {
-          document.getElementById('output').innerHTML = 'No data found.';
-          return;
-        }
+    const layers = [
+      { file: 'depot.geojson',          id: 'depot' },
+      { file: 'whitefield_line.geojson',  id: 'whitefield_line' },
+      { file: 'whitefield_line2.geojson', id: 'whitefield_line2' },
+      { file: 'whitefield_line3.geojson', id: 'whitefield_line3' },
+      { file: 'whitefield_line4.geojson', id: 'whitefield_line4' },
+      { file: 'whitefield_line5.geojson', id: 'whitefield_line5' },
+      { file: 'whitefield_sd.geojson',    id: 'whitefield_sd' },
+      { file: 'loc1.geojson',             id: 'loc1' }
+    ];
 
-        const keys = Object.keys(features[0].properties);
-        let html = '<table><tr>' + keys.map(k => `<th>${k}</th>`).join('') + '</tr>';
-
-        features.forEach(f => {
-          html += '<tr>' + keys.map(k => `<td>${f.properties[k] ?? ''}</td>`).join('') + '</tr>';
-        });
-
-        html += '</table>';
-        document.getElementById('output').innerHTML = html;
-      })
-      .catch(() => {
-        document.getElementById('output').innerHTML = 'Error loading data.geojson';
+    function buildTable(features) {
+      if (!features.length) return '<p>No features found.</p>';
+      const keys = Object.keys(features[0].properties);
+      let html = '<table><tr>' + keys.map(k => `<th>${k}</th>`).join('') + '</tr>';
+      features.forEach(f => {
+        html += '<tr>' + keys.map(k => `<td>${f.properties[k] ?? ''}</td>`).join('') + '</tr>';
       });
+      return html + '</table>';
+    }
+
+    layers.forEach(layer => {
+      fetch(layer.file)
+        .then(res => {
+          if (!res.ok) throw new Error('File not found');
+          return res.json();
+        })
+        .then(data => {
+          document.getElementById(layer.id).innerHTML = buildTable(data.features);
+        })
+        .catch(() => {
+          document.getElementById(layer.id).innerHTML =
+            `<p class="error">❌ Could not load ${layer.file}</p>`;
+        });
+    });
   </script>
 </body>
 </html>
-
-
