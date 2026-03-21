@@ -102,10 +102,9 @@
   .lf input:focus { border-color:rgba(255,255,255,0.3); }
   .lf input::placeholder { color:rgba(255,255,255,0.18); }
 
-  /* ── ERROR MESSAGE ── */
   .lerror {
     display:none;
-    margin: 0 22px 12px;
+    margin: 0 0 12px;
     padding: 9px 12px;
     background: rgba(192,57,43,0.15);
     border: 1px solid rgba(192,57,43,0.4);
@@ -120,8 +119,6 @@
     25%    { transform:translateX(-6px); }
     75%    { transform:translateX(6px); }
   }
-
-  /* ── INPUT ERROR STATE ── */
   .lf input.err {
     border-color: rgba(192,57,43,0.6);
     background: rgba(192,57,43,0.07);
@@ -145,23 +142,27 @@
   .lfoot { padding:10px 22px 16px; display:flex; justify-content:center; gap:18px; }
   .lfoot a { font-size:11px; color:rgba(255,255,255,0.27); text-decoration:none; }
   .lfoot a:hover { color:rgba(255,255,255,0.6); }
+
   #l-bottombar {
     position:relative; z-index:2; height:62px; flex-shrink:0;
     background:#0c1120; border-top:1px solid rgba(255,255,255,0.07);
     display:flex; align-items:center; justify-content:center; gap:10px; padding:0 20px;
+    flex-wrap: wrap;
   }
   .lflabel { font-size:11px; font-weight:700; color:rgba(255,255,255,0.2); text-transform:uppercase; letter-spacing:0.5px; margin-right:4px; }
   .lmbtn { padding:9px 18px; border:none; border-radius:3px; font-family:Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; cursor:default; display:flex; align-items:center; gap:7px; opacity:0.55; }
   .lm-green { background:#27ae60; }
   .lm-blue  { background:#2980b9; }
+
   @keyframes glow {
     from { box-shadow: 0 0 6px rgba(39,174,96,0.4); }
     to   { box-shadow: 0 0 16px rgba(39,174,96,0.9), 0 0 28px rgba(39,174,96,0.4); }
   }
 
-  /* SHARED NAV */
+  /* SHARED SCREENS */
   #map-screen, #user-screen { display: none; flex-direction: column; height: 100vh; }
   #map-screen.visible, #user-screen.visible { display: flex; }
+
   #map-nav {
     height: 50px; flex-shrink:0; background: #16213e;
     border-bottom:1px solid rgba(255,255,255,0.08);
@@ -184,6 +185,7 @@
   #controls {
     height: 72px; flex-shrink:0; background: #16213e;
     display: flex; align-items: center; justify-content: center; gap: 12px;
+    flex-wrap: wrap;
   }
   .layer-btn {
     padding: 10px 22px; border: 3px solid transparent; border-radius: 4px;
@@ -250,6 +252,7 @@
     <div class="bg-road br4"></div>
   </div>
   <div id="login-overlay"></div>
+
   <div id="l-topbar">
     <span class="l-brand">♻️ WasteTrack</span>
     <span class="l-sub">Whitefield Waste Management · Bengaluru</span>
@@ -257,6 +260,7 @@
     <div class="l-dot"></div>
     <span class="l-live">LIVE</span>
   </div>
+
   <div id="l-center">
     <div class="lcard">
       <div class="lc-head">
@@ -266,9 +270,10 @@
           <div class="lc-sub">Real-time Fleet &amp; Waste Collection Tracking</div>
         </div>
       </div>
+
       <div class="ltabs">
-        <button class="ltab on" id="tu" onclick="swTab('user')">User — Track Vehicle</button>
-        <button class="ltab"    id="td" onclick="swTab('depot')">Depot Dashboard</button>
+        <button class="ltab on" id="tu" onclick="swTab('user')">🚛 User — Track Vehicle</button>
+        <button class="ltab"    id="td" onclick="swTab('depot')">🏭 Depot Dashboard</button>
       </div>
 
       <!-- USER PANEL -->
@@ -285,7 +290,6 @@
           <label>Your Zone / Area</label>
           <div class="liw"><span>📍</span><input type="text" id="u-zone" placeholder="e.g. Whitefield Zone A"/></div>
         </div>
-        <!-- error box sits just above button -->
         <div class="lerror" id="u-error">⚠️ Please fill in all fields</div>
         <button class="lbtn lbtn-red" onclick="doLogin('user')">🚛 Track My Vehicle</button>
       </div>
@@ -306,7 +310,6 @@
           <label>Password</label>
           <div class="liw"><span>🔒</span><input type="password" id="d-pass" placeholder="Enter depot password"/></div>
         </div>
-        <!-- error box sits just above button -->
         <div class="lerror" id="d-error">⚠️ Please fill in all fields</div>
         <button class="lbtn lbtn-blue" onclick="doLogin('depot')">🏭 Open Depot Dashboard</button>
       </div>
@@ -323,38 +326,40 @@
     <span class="lflabel">Features</span>
     <div class="lmbtn lm-green">🌿 Area Covered</div>
     <div class="lmbtn lm-blue">📍 Node Mapping</div>
-    <a href="wf.html" style="text-decoration:none;">
-      <div class="lmbtn" style="background:#1e8449;opacity:1;cursor:pointer;box-shadow:0 0 10px rgba(39,174,96,0.5);animation:glow 2s infinite alternate;">🌿 Green Zone Skip Route Optimizer</div>
-    </a>
+    <a href="wf.html" style="text-decoration:none;"><div class="lmbtn" style="background:#1e8449;opacity:1;cursor:pointer;box-shadow:0 0 10px rgba(39,174,96,0.5);animation:glow 2s infinite alternate;">🌿 Green Zone Skip Route Optimizer</div></a>
+    <a href="cutter.html" style="text-decoration:none;"><div class="lmbtn" style="background:#0f2a1f;opacity:1;cursor:pointer;border:1px solid rgba(39,174,96,0.5);box-shadow:0 0 10px rgba(39,174,96,0.35);animation:glow 2s infinite alternate 0.5s;">✂️ Dead-Mileage Cutter</div></a>
+    <a href="density.html" style="text-decoration:none;"><div class="lmbtn" style="background:#0f2a1f;opacity:1;cursor:pointer;border:1px solid rgba(39,174,96,0.5);box-shadow:0 0 10px rgba(39,174,96,0.35);animation:glow 2s infinite alternate 0.5s;">📊 Density-wise Collection</div></a>
   </div>
 </div>
+<!-- /login-screen -->
 
 
 <!-- ═══ DEPOT MAP SCREEN ═══ -->
 <div id="map-screen">
   <div id="map-nav">
     <span class="mn-brand">♻️ WasteTrack</span>
-    <span class="mn-role-depot">Depot Dashboard</span>
+    <span class="mn-role-depot">🏭 Depot Dashboard</span>
     <div class="mn-space"></div>
     <span class="mn-user" id="depot-name"></span>
     <button class="mn-logout" onclick="doLogout()">← Logout</button>
   </div>
   <div id="map"></div>
   <div id="controls">
-    <button class="layer-btn" id="btn-ndvi">Area Analysis</button>
+    <button class="layer-btn" id="btn-ndvi">🌿 Green Zone Analysis</button>
     <button class="layer-btn" id="btn-node">📍 Node Mapping</button>
-    <a href="wf.html" style="text-decoration:none;">
-      <button class="layer-btn" style="background:#1e8449;border:2px solid #27ae60;box-shadow:0 0 12px rgba(39,174,96,0.55);animation:ctrlGlow 2s infinite alternate;">🌿 Green Zone Skip Route Optimizer</button>
-    </a>
+    <a href="wf.html" style="text-decoration:none;"><button class="layer-btn" style="background:#1e8449;border:2px solid #27ae60;box-shadow:0 0 12px rgba(39,174,96,0.55);animation:ctrlGlow 2s infinite alternate;">🌿 Green Zone Skip Route Optimizer</button></a>
+    <a href="cutter.html" style="text-decoration:none;"><button class="layer-btn" style="background:#0f2a1f;border:2px solid rgba(39,174,96,0.6);color:#4ade80;box-shadow:0 0 12px rgba(39,174,96,0.4);">✂️ Dead-Mileage Cutter</button></a>
+    <a href="density.html" style="text-decoration:none;"><button class="layer-btn" style="background:#0f2a1f;border:2px solid rgba(39,174,96,0.6);color:#4ade80;box-shadow:0 0 12px rgba(39,174,96,0.4);">📊 Density-wise Collection</button></a>
   </div>
 </div>
+<!-- /map-screen -->
 
 
 <!-- ═══ USER TRACKING SCREEN ═══ -->
 <div id="user-screen">
   <div id="map-nav">
     <span class="mn-brand">♻️ WasteTrack</span>
-    <span class="mn-role-user">My Zone Tracker</span>
+    <span class="mn-role-user">🚛 My Zone Tracker</span>
     <div class="mn-space"></div>
     <span class="mn-user" id="user-name"></span>
     <button class="mn-logout" onclick="doLogout()">← Logout</button>
@@ -408,6 +413,7 @@
     </div>
   </div>
 </div>
+<!-- /user-screen -->
 
 
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
@@ -419,58 +425,41 @@
     ['tu','td'].forEach(function(id){ document.getElementById(id).classList.remove('on'); });
     document.getElementById(role === 'user' ? 'pu' : 'pd').classList.add('on');
     document.getElementById(role === 'user' ? 'tu' : 'td').classList.add('on');
-    // clear errors on tab switch
     document.getElementById('u-error').style.display = 'none';
     document.getElementById('d-error').style.display = 'none';
     clearErr(['u-email','u-pass','u-zone','d-id','d-pass']);
   }
 
-  // ── HELPERS ────────────────────────────────────────────────
   function clearErr(ids) {
     ids.forEach(function(id){
       var el = document.getElementById(id);
       if (el) el.classList.remove('err');
     });
   }
-
-  function markErr(id) {
-    document.getElementById(id).classList.add('err');
-  }
+  function markErr(id) { document.getElementById(id).classList.add('err'); }
 
   function showError(errId, msg) {
     var el = document.getElementById(errId);
     el.textContent = '⚠️ ' + msg;
     el.style.display = 'block';
-    // re-trigger animation
     el.style.animation = 'none';
-    el.offsetHeight; // reflow
+    el.offsetHeight;
     el.style.animation = 'shake 0.3s ease';
   }
 
-  // ── LOGIN WITH VALIDATION ──────────────────────────────────
+  // ── LOGIN ──────────────────────────────────────────────────
   function doLogin(role) {
-
     if (role === 'user') {
       var email = document.getElementById('u-email').value.trim();
       var pass  = document.getElementById('u-pass').value.trim();
       var zone  = document.getElementById('u-zone').value.trim();
-
-      // clear previous errors
       clearErr(['u-email','u-pass','u-zone']);
       document.getElementById('u-error').style.display = 'none';
-
-      // validate
       var errors = [];
       if (!email) { markErr('u-email'); errors.push('mobile/email'); }
       if (!pass)  { markErr('u-pass');  errors.push('password'); }
       if (!zone)  { markErr('u-zone');  errors.push('zone'); }
-
-      if (errors.length > 0) {
-        showError('u-error', 'Please fill in: ' + errors.join(', '));
-        return; // STOP — do not proceed
-      }
-
-      // all good — proceed
+      if (errors.length > 0) { showError('u-error', 'Please fill in: ' + errors.join(', ')); return; }
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('user-name').textContent = '👤 ' + email;
       document.getElementById('user-screen').classList.add('visible');
@@ -479,22 +468,12 @@
     } else {
       var staffId = document.getElementById('d-id').value.trim();
       var dpass   = document.getElementById('d-pass').value.trim();
-
-      // clear previous errors
       clearErr(['d-id','d-pass']);
       document.getElementById('d-error').style.display = 'none';
-
-      // validate
       var derrors = [];
       if (!staffId) { markErr('d-id');   derrors.push('depot/staff ID'); }
       if (!dpass)   { markErr('d-pass'); derrors.push('password'); }
-
-      if (derrors.length > 0) {
-        showError('d-error', 'Please fill in: ' + derrors.join(', '));
-        return; // STOP — do not proceed
-      }
-
-      // all good — proceed
+      if (derrors.length > 0) { showError('d-error', 'Please fill in: ' + derrors.join(', ')); return; }
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('depot-name').textContent = '👤 ' + staffId;
       document.getElementById('map-screen').classList.add('visible');
@@ -507,11 +486,9 @@
     document.getElementById('map-screen').classList.remove('visible');
     document.getElementById('user-screen').classList.remove('visible');
     document.getElementById('login-screen').style.display = 'flex';
-    // clear all fields and errors on logout
     ['u-email','u-pass','u-zone','d-id','d-pass'].forEach(function(id){
       var el = document.getElementById(id);
-      el.value = '';
-      el.classList.remove('err');
+      el.value = ''; el.classList.remove('err');
     });
     document.getElementById('u-error').style.display = 'none';
     document.getElementById('d-error').style.display = 'none';
@@ -521,15 +498,11 @@
   // DEPOT MAP
   // ══════════════════════════════════════════════════════════
   var depotReady = false;
-
   function initDepotMap() {
     if (depotReady) return;
     depotReady = true;
-
     var map = L.map('map').setView([12.9835, 77.7427], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
 
     var groups = {
       road: L.layerGroup().addTo(map),
@@ -552,22 +525,19 @@
     };
 
     function clean(data) { delete data.crs; return data; }
-
     function loadIntoGroup(url, key) {
       fetch(url)
         .then(function(r){ if(!r.ok) throw new Error('404: '+url); return r.json(); })
         .then(function(data){
           data = clean(data);
-          var layer = L.geoJSON(data, {
+          L.geoJSON(data, {
             style: defaultStyles[key],
-            pointToLayer: function(f, ll){ return L.circleMarker(ll, pointStyles.def); },
-            onEachFeature: function(f, l){
+            pointToLayer: function(f,ll){ return L.circleMarker(ll, pointStyles.def); },
+            onEachFeature: function(f,l){
               var p = f.properties;
               if(p) l.bindPopup(String(p.name||p.id||p.NAME||JSON.stringify(p)));
             }
-          });
-          groups[key].addLayer(layer);
-          console.log('✅ Loaded:', url);
+          }).addTo(groups[key]);
         })
         .catch(function(e){ console.warn('⚠️ Skipped:', e.message); });
     }
@@ -575,14 +545,10 @@
     ['data/whitefield_line.geojson','data/whitefield_line2.geojson',
      'data/whitefield_line3.geojson','data/whitefield_line4.geojson',
      'data/whitefield_line5.geojson'].forEach(function(f){ loadIntoGroup(f,'road'); });
-
     loadIntoGroup('data/whitefield.geojson','ndvi');
-
-    ['data/loc1.geojson','data/depot.geojson',
-     'data/deport_point.geojson'].forEach(function(f){ loadIntoGroup(f,'node'); });
+    ['data/loc1.geojson','data/depot.geojson','data/deport_point.geojson'].forEach(function(f){ loadIntoGroup(f,'node'); });
 
     var activeKey = null;
-
     function setHighlight(key, on) {
       groups[key].eachLayer(function(gl){
         if(gl.setStyle) gl.setStyle(on ? highlightStyles[key] : defaultStyles[key]);
@@ -591,25 +557,13 @@
         });
       });
     }
-
     function handleBtn(key, btn) {
-      if(activeKey === key){
-        setHighlight(key, false);
-        btn.classList.remove('active');
-        activeKey = null; return;
-      }
-      if(activeKey){
-        setHighlight(activeKey, false);
-        document.querySelectorAll('.layer-btn').forEach(function(b){ b.classList.remove('active'); });
-      }
-      setHighlight(key, true);
-      btn.classList.add('active');
-      activeKey = key;
+      if(activeKey === key){ setHighlight(key,false); btn.classList.remove('active'); activeKey=null; return; }
+      if(activeKey){ setHighlight(activeKey,false); document.querySelectorAll('.layer-btn').forEach(function(b){ b.classList.remove('active'); }); }
+      setHighlight(key,true); btn.classList.add('active'); activeKey=key;
     }
-
     document.getElementById('btn-ndvi').onclick = function(){ handleBtn('ndvi',this); };
     document.getElementById('btn-node').onclick = function(){ handleBtn('node',this); };
-
     setTimeout(function(){ map.invalidateSize(); }, 100);
   }
 
@@ -617,47 +571,25 @@
   // USER MAP
   // ══════════════════════════════════════════════════════════
   var userReady = false;
-  var DEPOT_BOUNDS = [[12.975, 77.730],[13.010, 77.780]];
+  var DEPOT_BOUNDS = [[12.975,77.730],[13.010,77.780]];
 
   function initUserMap() {
     if (userReady) return;
     userReady = true;
-
     var userMap = L.map('user-map', {
-      center: [12.9835, 77.7427],
-      zoom: 14, minZoom: 13, maxZoom: 17,
-      maxBounds: DEPOT_BOUNDS,
-      maxBoundsViscosity: 1.0
+      center:[12.9835,77.7427], zoom:14, minZoom:13, maxZoom:17,
+      maxBounds:DEPOT_BOUNDS, maxBoundsViscosity:1.0
     });
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      attribution: '© OpenStreetMap', maxZoom:17
-    }).addTo(userMap);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'© OpenStreetMap', maxZoom:17 }).addTo(userMap);
 
     var world = [[-90,-180],[-90,180],[90,180],[90,-180]];
-    var hole  = [
-      [DEPOT_BOUNDS[0][0], DEPOT_BOUNDS[0][1]],
-      [DEPOT_BOUNDS[0][0], DEPOT_BOUNDS[1][1]],
-      [DEPOT_BOUNDS[1][0], DEPOT_BOUNDS[1][1]],
-      [DEPOT_BOUNDS[1][0], DEPOT_BOUNDS[0][1]]
-    ];
-    L.polygon([world, hole],{
-      color:'none', fillColor:'#0a0e1a', fillOpacity:0.65, interactive:false
-    }).addTo(userMap);
+    var hole  = [[DEPOT_BOUNDS[0][0],DEPOT_BOUNDS[0][1]],[DEPOT_BOUNDS[0][0],DEPOT_BOUNDS[1][1]],[DEPOT_BOUNDS[1][0],DEPOT_BOUNDS[1][1]],[DEPOT_BOUNDS[1][0],DEPOT_BOUNDS[0][1]]];
+    L.polygon([world,hole],{ color:'none', fillColor:'#0a0e1a', fillOpacity:0.65, interactive:false }).addTo(userMap);
 
-    L.marker([12.9835, 77.7427],{
-      icon: L.divIcon({
-        className:'',
-        html:'<div style="font-size:26px;filter:drop-shadow(0 2px 6px rgba(192,57,43,0.8))">🏭</div>',
-        iconAnchor:[13,13]
-      })
-    }).bindPopup('<b>WF Main Depot</b><br>Whitefield').addTo(userMap);
+    L.marker([12.9835,77.7427],{ icon:L.divIcon({ className:'', html:'<div style="font-size:26px;filter:drop-shadow(0 2px 6px rgba(192,57,43,0.8))">🏭</div>', iconAnchor:[13,13] }) }).bindPopup('<b>WF Main Depot</b><br>Whitefield').addTo(userMap);
 
-    var route = [
-      [12.9990,77.7180],[12.9960,77.7250],[12.9930,77.7300],
-      [12.9900,77.7350],[12.9860,77.7400],[12.9840,77.7430]
-    ];
-    L.polyline(route,{color:'#e74c3c',weight:4,opacity:0.8,dashArray:'8,4'}).addTo(userMap);
+    var route = [[12.9990,77.7180],[12.9960,77.7250],[12.9930,77.7300],[12.9900,77.7350],[12.9860,77.7400],[12.9840,77.7430]];
+    L.polyline(route,{ color:'#e74c3c', weight:4, opacity:0.8, dashArray:'8,4' }).addTo(userMap);
 
     var stops = [
       {pos:[12.9990,77.7180], name:'Kadugodi Stop',       done:true},
@@ -668,28 +600,16 @@
     ];
     stops.forEach(function(s){
       var col = s.done ? '#27ae60' : s.next ? '#ffb300' : '#555';
-      L.circleMarker(s.pos,{radius:8,fillColor:col,color:'#fff',weight:2,fillOpacity:1})
+      L.circleMarker(s.pos,{ radius:8, fillColor:col, color:'#fff', weight:2, fillOpacity:1 })
        .bindPopup('<b>'+s.name+'</b><br>'+(s.done?'✅ Collected':s.next?'⏳ Next Stop':'⏱ Pending'))
        .addTo(userMap);
     });
 
-    L.circleMarker([12.9840,77.7430],{
-      radius:11,fillColor:'#2980b9',color:'#fff',weight:3,fillOpacity:0.9
-    }).bindPopup('<b>📍 Your Location</b>').addTo(userMap);
+    L.circleMarker([12.9840,77.7430],{ radius:11, fillColor:'#2980b9', color:'#fff', weight:3, fillOpacity:0.9 }).bindPopup('<b>📍 Your Location</b>').addTo(userMap);
 
     var vehIdx = 0;
-    var vehMarker = L.marker(route[0],{
-      icon: L.divIcon({
-        className:'',
-        html:'<div style="font-size:24px;filter:drop-shadow(0 2px 5px rgba(255,100,0,0.7))">🚛</div>',
-        iconAnchor:[12,12]
-      })
-    }).bindPopup('<b>WF-VH-04</b><br>En Route · 62% full').addTo(userMap);
-
-    setInterval(function(){
-      vehIdx = (vehIdx+1) % route.length;
-      vehMarker.setLatLng(route[vehIdx]);
-    }, 2500);
+    var vehMarker = L.marker(route[0],{ icon:L.divIcon({ className:'', html:'<div style="font-size:24px;filter:drop-shadow(0 2px 5px rgba(255,100,0,0.7))">🚛</div>', iconAnchor:[12,12] }) }).bindPopup('<b>WF-VH-04</b><br>En Route · 62% full').addTo(userMap);
+    setInterval(function(){ vehIdx=(vehIdx+1)%route.length; vehMarker.setLatLng(route[vehIdx]); }, 2500);
 
     setTimeout(function(){ userMap.invalidateSize(); }, 150);
   }

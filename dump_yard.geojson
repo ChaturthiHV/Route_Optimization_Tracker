@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "dump_yard",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1, "Name": "Dump Yard" }, "geometry": { "type": "Point", "coordinates": [ 77.7712785303343, 13.011081115548221 ] } }
+]
+}

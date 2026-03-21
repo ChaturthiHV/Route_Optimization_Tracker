@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dead-Mileage Cutter — WasteTrack</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; font-family:Arial,sans-serif; background:#0f1623; color:#fff; }
+
+  /* NAV */
+  #map-nav {
+    height:50px; background:#16213e;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    display:flex; align-items:center; padding:0 16px; gap:10px;
+  }
+  .mn-brand { font-size:14px; font-weight:700; }
+  .mn-tag   { font-size:12px; color:#27ae60; font-weight:600; }
+  .mn-space { flex:1; }
+  .mn-back  {
+    font-size:12px; color:rgba(255,255,255,0.4);
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+    border-radius:3px; padding:5px 10px; cursor:pointer;
+    text-decoration:none; transition:all 0.18s;
+  }
+  .mn-back:hover { color:#fff; border-color:rgba(255,255,255,0.3); }
+  .l-dot  { width:7px; height:7px; border-radius:50%; background:#4caf50; box-shadow:0 0 7px #4caf50; animation:blink 2s infinite; }
+  .l-live { font-size:11px; color:#4caf50; font-weight:600; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* MAP MODE PILLS */
+  .mode-pills { display:flex; gap:6px; }
+  .mpill {
+    padding:4px 12px; border-radius:20px;
+    border:1px solid rgba(255,255,255,0.12);
+    font-size:11px; font-weight:700; cursor:pointer;
+    color:rgba(255,255,255,0.45); background:transparent;
+    font-family:Arial,sans-serif; transition:all 0.18s;
+  }
+  .mpill:hover { color:#fff; }
+  .mpill.on { background:rgba(39,174,96,0.2); border-color:#27ae60; color:#27ae60; }
+  #pill-sat.on  { background:rgba(41,128,185,0.2); border-color:#2980b9; color:#2980b9; }
+  #pill-dark.on { background:rgba(80,60,140,0.2); border-color:#9b59b6; color:#9b59b6; }
+
+  /* STAT STRIP */
+  #stat-strip {
+    height:36px; background:rgba(10,14,26,0.97);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    display:flex; align-items:center;
+  }
+  .ss-item { display:flex; align-items:center; gap:8px; padding:0 18px; height:100%; border-right:1px solid rgba(255,255,255,0.06); }
+  .ss-lbl  { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:rgba(255,255,255,0.28); }
+  .ss-val  { font-size:13px; font-weight:700; color:#27ae60; }
+  .ss-val.blue  { color:#2980b9; }
+  .ss-val.amber { color:#ffb300; }
+
+  /* MAIN BODY */
+  #body-wrap { display:flex; height:calc(100vh - 86px - 72px); }
+
+  /* MAP */
+  #map { flex:1; height:100%; }
+
+  /* RIGHT PANEL */
+  #right-panel {
+    width:300px; flex-shrink:0;
+    background:#0f1623;
+    border-left:1px solid rgba(255,255,255,0.07);
+    display:flex; flex-direction:column;
+    height:100%; overflow:hidden;
+  }
+  .rp-head { padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
+  .rp-lbl   { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:rgba(255,255,255,0.3); margin-bottom:4px; }
+  .rp-title { font-size:14px; font-weight:700; color:#fff; }
+  .rp-sub   { font-size:11px; color:rgba(255,255,255,0.35); margin-top:3px; }
+
+  #zone-list { flex:1; overflow-y:auto; }
+  #zone-list::-webkit-scrollbar { width:4px; }
+  #zone-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
+
+  .zone-item {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 16px; cursor:pointer;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+    border-left:3px solid transparent;
+    transition:background 0.15s;
+  }
+  .zone-item:hover  { background:rgba(255,255,255,0.04); }
+  .zone-item.active { background:rgba(39,174,96,0.1); border-left-color:#27ae60; padding-left:13px; }
+  .zi-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .zi-info { flex:1; }
+  .zi-id   { font-size:12px; font-weight:700; color:#fff; }
+  .zi-dist { font-size:10px; color:rgba(255,255,255,0.35); margin-top:1px; }
+  .zi-cost { font-size:12px; font-weight:700; color:#27ae60; }
+
+  /* DETAIL PANEL */
+  #detail-panel {
+    flex-shrink:0; border-top:1px solid rgba(255,255,255,0.07);
+    max-height:0; overflow:hidden; padding:0 16px;
+    transition:max-height 0.3s ease, padding 0.3s ease;
+  }
+  #detail-panel.open { max-height:270px; padding:14px 16px; }
+  .dp-zone    { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:#27ae60; margin-bottom:10px; }
+  .dp-metrics { display:flex; gap:8px; margin-bottom:10px; }
+  .dp-metric  { flex:1; text-align:center; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:4px; padding:8px 4px; }
+  .dm-val     { font-size:15px; font-weight:700; }
+  .dm-val.blue  { color:#2980b9; }
+  .dm-val.amber { color:#ffb300; }
+  .dm-val.green { color:#27ae60; }
+  .dm-lbl { font-size:9px; color:rgba(255,255,255,0.28); text-transform:uppercase; letter-spacing:0.4px; margin-top:2px; }
+  .dp-bar-lbl   { font-size:9px; color:rgba(255,255,255,0.28); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:5px; }
+  .dp-bar-track { height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
+  .dp-bar-fill  { height:100%; background:linear-gradient(90deg,#27ae60,#2980b9); border-radius:2px; transition:width 0.5s ease; }
+  .dp-coords    { font-size:10px; color:rgba(255,255,255,0.25); margin-top:8px; }
+
+  /* CONTROLS */
+  #controls {
+    height:72px; background:#16213e;
+    border-top:1px solid rgba(255,255,255,0.08);
+    display:flex; align-items:center; justify-content:center; gap:12px;
+  }
+  .layer-btn {
+    padding:10px 20px; border:3px solid transparent; border-radius:4px;
+    cursor:pointer; font-size:13px; font-weight:bold; color:white;
+    font-family:Arial,sans-serif; transition:all 0.2s; opacity:0.75;
+  }
+  .layer-btn.active { opacity:1; border-color:#fff; box-shadow:0 0 14px rgba(255,255,255,0.4); transform:scale(1.05); }
+  #btn-routes { background:#27ae60; }
+  #btn-grid   { background:#2980b9; }
+  #btn-hub    { background:#c0392b; }
+
+  /* Leaflet popup */
+  .leaflet-popup-content-wrapper {
+    background:rgba(10,14,26,0.97) !important;
+    border:1px solid rgba(255,255,255,0.1) !important;
+    border-radius:6px !important; color:#fff !important;
+    box-shadow:0 8px 32px rgba(0,0,0,0.7) !important;
+  }
+  .leaflet-popup-tip { background:rgba(10,14,26,0.97) !important; }
+  .leaflet-popup-close-button { color:rgba(255,255,255,0.4) !important; }
+
+  /* LEGEND */
+  #legend {
+    position:absolute; left:12px; bottom:12px; z-index:999;
+    background:rgba(10,14,26,0.95); border:1px solid rgba(255,255,255,0.08);
+    border-radius:4px; padding:10px 12px; pointer-events:none;
+  }
+  .leg-lbl { font-size:9px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; color:rgba(255,255,255,0.28); margin-bottom:7px; }
+  .leg-row { display:flex; align-items:center; gap:7px; margin-bottom:5px; font-size:11px; color:rgba(255,255,255,0.5); }
+  .ld { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .ll { width:20px; height:3px; border-radius:1px; flex-shrink:0; }
+  .lb { width:18px; height:10px; border-radius:2px; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<div id="map-nav">
+  <span class="mn-brand">♻️ WasteTrack</span>
+  <span class="mn-tag">✂️ Dead-Mileage Cutter</span>
+  <div class="mn-space"></div>
+  <div class="mode-pills">
+    <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.2);letter-spacing:.5px;align-self:center;margin-right:2px;">MAP</span>
+    <button class="mpill on"  id="pill-road" onclick="setMode('road',this)">🛣 Road</button>
+    <button class="mpill"     id="pill-sat"  onclick="setMode('sat',this)">🛰 Satellite</button>
+    <button class="mpill"     id="pill-dark" onclick="setMode('dark',this)">🌑 Dark</button>
+  </div>
+  <div class="l-dot" style="margin-left:14px;"></div>
+  <span class="l-live">LIVE</span>
+  <a href="index.html" class="mn-back" style="margin-left:10px;">← Back</a>
+</div>
+
+<div id="stat-strip">
+  <div class="ss-item"><span class="ss-lbl">Active Zones</span><span class="ss-val" id="ss-zones">38</span></div>
+  <div class="ss-item"><span class="ss-lbl">Total Distance</span><span class="ss-val blue" id="ss-dist">—</span></div>
+  <div class="ss-item"><span class="ss-lbl">Total Fuel</span><span class="ss-val amber" id="ss-fuel">—</span></div>
+  <div class="ss-item"><span class="ss-lbl">Total Cost</span><span class="ss-val" id="ss-cost">—</span></div>
+</div>
+
+<div id="body-wrap">
+  <div style="flex:1;position:relative;">
+    <div id="map" style="position:absolute;inset:0;"></div>
+    <div id="legend">
+      <div class="leg-lbl">Legend</div>
+      <div class="leg-row"><div class="ld" style="background:#facc15;box-shadow:0 0 5px #facc15;"></div>Dump Yard</div>
+      <div class="leg-row"><div class="ld" style="background:#27ae60;"></div>Zone (near)</div>
+      <div class="leg-row"><div class="ld" style="background:#e67e22;"></div>Zone (mid)</div>
+      <div class="leg-row"><div class="ld" style="background:#e74c3c;"></div>Zone (far)</div>
+      <div class="leg-row"><div class="ll" style="background:#c0306e;opacity:0.7;"></div>Route line</div>
+      <div class="leg-row"><div class="lb" style="background:rgba(41,128,185,0.12);border:1px solid rgba(41,128,185,0.5);"></div>Zone grid</div>
+    </div>
+  </div>
+  <div id="right-panel">
+    <div class="rp-head">
+      <div class="rp-lbl">Route Intelligence</div>
+      <div class="rp-title">Dead-Mileage Cutter</div>
+      <div class="rp-sub">Click any zone to inspect route</div>
+    </div>
+    <div id="zone-list"></div>
+    <div id="detail-panel"></div>
+  </div>
+</div>
+
+<div id="controls">
+  <button class="layer-btn active" id="btn-routes" onclick="toggleLayer('routes',this)">🛣 Routes</button>
+  <button class="layer-btn active" id="btn-grid"   onclick="toggleLayer('grid',this)">⬜ Zone Grid</button>
+  <button class="layer-btn active" id="btn-hub"    onclick="toggleLayer('hub',this)">🏭 Dump Yard</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script>
+var CENTROIDS_GEO = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{"id":5,"left":77.731237622,"top":12.996095907,"right":77.73623762199999,"bottom":12.991095907,"row_index":4,"col_index":0},"geometry":{"type":"Point","coordinates":[77.733737622,12.993595907]}},{"type":"Feature","properties":{"id":6,"left":77.731237622,"top":12.991095907,"right":77.73623762199999,"bottom":12.986095907,"row_index":5,"col_index":0},"geometry":{"type":"Point","coordinates":[77.733737622,12.988595907]}},{"type":"Feature","properties":{"id":14,"left":77.73623762199999,"top":12.996095907,"right":77.74123762199999,"bottom":12.991095907,"row_index":4,"col_index":1},"geometry":{"type":"Point","coordinates":[77.738737622,12.993595907]}},{"type":"Feature","properties":{"id":15,"left":77.73623762199999,"top":12.991095907,"right":77.74123762199999,"bottom":12.986095907,"row_index":5,"col_index":1},"geometry":{"type":"Point","coordinates":[77.738737622,12.988595907]}},{"type":"Feature","properties":{"id":22,"left":77.741237622,"top":13.001095907,"right":77.746237622,"bottom":12.996095907,"row_index":3,"col_index":2},"geometry":{"type":"Point","coordinates":[77.74373762200001,12.998595907]}},{"type":"Feature","properties":{"id":23,"left":77.741237622,"top":12.996095907,"right":77.746237622,"bottom":12.991095907,"row_index":4,"col_index":2},"geometry":{"type":"Point","coordinates":[77.74373762200001,12.993595907]}},{"type":"Feature","properties":{"id":24,"left":77.741237622,"top":12.991095907,"right":77.746237622,"bottom":12.986095907,"row_index":5,"col_index":2},"geometry":{"type":"Point","coordinates":[77.74373762200001,12.988595907]}},{"type":"Feature","properties":{"id":25,"left":77.741237622,"top":12.986095907000001,"right":77.746237622,"bottom":12.981095907,"row_index":6,"col_index":2},"geometry":{"type":"Point","coordinates":[77.74373762200001,12.983595907]}},{"type":"Feature","properties":{"id":26,"left":77.741237622,"top":12.981095907,"right":77.746237622,"bottom":12.976095907,"row_index":7,"col_index":2},"geometry":{"type":"Point","coordinates":[77.74373762200001,12.978595907]}},{"type":"Feature","properties":{"id":32,"left":77.746237622,"top":12.996095907,"right":77.75123762199999,"bottom":12.991095907,"row_index":4,"col_index":3},"geometry":{"type":"Point","coordinates":[77.748737622,12.993595907]}},{"type":"Feature","properties":{"id":33,"left":77.746237622,"top":12.991095907,"right":77.75123762199999,"bottom":12.986095907,"row_index":5,"col_index":3},"geometry":{"type":"Point","coordinates":[77.748737622,12.988595907]}},{"type":"Feature","properties":{"id":34,"left":77.746237622,"top":12.986095907000001,"right":77.75123762199999,"bottom":12.981095907,"row_index":6,"col_index":3},"geometry":{"type":"Point","coordinates":[77.748737622,12.983595907]}},{"type":"Feature","properties":{"id":35,"left":77.746237622,"top":12.981095907,"right":77.75123762199999,"bottom":12.976095907,"row_index":7,"col_index":3},"geometry":{"type":"Point","coordinates":[77.748737622,12.978595907]}},{"type":"Feature","properties":{"id":40,"left":77.75123762199999,"top":13.001095907,"right":77.75623762199999,"bottom":12.996095907,"row_index":3,"col_index":4},"geometry":{"type":"Point","coordinates":[77.753737622,12.998595907]}},{"type":"Feature","properties":{"id":41,"left":77.75123762199999,"top":12.996095907,"right":77.75623762199999,"bottom":12.991095907,"row_index":4,"col_index":4},"geometry":{"type":"Point","coordinates":[77.753737622,12.993595907]}},{"type":"Feature","properties":{"id":42,"left":77.75123762199999,"top":12.991095907,"right":77.75623762199999,"bottom":12.986095907,"row_index":5,"col_index":4},"geometry":{"type":"Point","coordinates":[77.753737622,12.988595907]}},{"type":"Feature","properties":{"id":43,"left":77.75123762199999,"top":12.986095907000001,"right":77.75623762199999,"bottom":12.981095907,"row_index":6,"col_index":4},"geometry":{"type":"Point","coordinates":[77.753737622,12.983595907]}},{"type":"Feature","properties":{"id":44,"left":77.75123762199999,"top":12.981095907,"right":77.75623762199999,"bottom":12.976095907,"row_index":7,"col_index":4},"geometry":{"type":"Point","coordinates":[77.753737622,12.978595907]}},{"type":"Feature","properties":{"id":49,"left":77.756237622,"top":13.001095907,"right":77.761237622,"bottom":12.996095907,"row_index":3,"col_index":5},"geometry":{"type":"Point","coordinates":[77.758737622,12.998595907]}},{"type":"Feature","properties":{"id":50,"left":77.756237622,"top":12.996095907,"right":77.761237622,"bottom":12.991095907,"row_index":4,"col_index":5},"geometry":{"type":"Point","coordinates":[77.758737622,12.993595907]}},{"type":"Feature","properties":{"id":51,"left":77.756237622,"top":12.991095907,"right":77.761237622,"bottom":12.986095907,"row_index":5,"col_index":5},"geometry":{"type":"Point","coordinates":[77.758737622,12.988595907]}},{"type":"Feature","properties":{"id":52,"left":77.756237622,"top":12.986095907000001,"right":77.761237622,"bottom":12.981095907,"row_index":6,"col_index":5},"geometry":{"type":"Point","coordinates":[77.758737622,12.983595907]}},{"type":"Feature","properties":{"id":57,"left":77.761237622,"top":13.006095907,"right":77.76623762199999,"bottom":13.001095907,"row_index":2,"col_index":6},"geometry":{"type":"Point","coordinates":[77.763737622,13.003595907]}},{"type":"Feature","properties":{"id":58,"left":77.761237622,"top":13.001095907,"right":77.76623762199999,"bottom":12.996095907,"row_index":3,"col_index":6},"geometry":{"type":"Point","coordinates":[77.763737622,12.998595907]}},{"type":"Feature","properties":{"id":59,"left":77.761237622,"top":12.996095907,"right":77.76623762199999,"bottom":12.991095907,"row_index":4,"col_index":6},"geometry":{"type":"Point","coordinates":[77.763737622,12.993595907]}},{"type":"Feature","properties":{"id":60,"left":77.761237622,"top":12.991095907,"right":77.76623762199999,"bottom":12.986095907,"row_index":5,"col_index":6},"geometry":{"type":"Point","coordinates":[77.763737622,12.988595907]}},{"type":"Feature","properties":{"id":61,"left":77.761237622,"top":12.986095907000001,"right":77.76623762199999,"bottom":12.981095907,"row_index":6,"col_index":6},"geometry":{"type":"Point","coordinates":[77.763737622,12.983595907]}},{"type":"Feature","properties":{"id":67,"left":77.76623762199999,"top":13.001095907,"right":77.77123762199999,"bottom":12.996095907,"row_index":3,"col_index":7},"geometry":{"type":"Point","coordinates":[77.76873762199997,12.998595907]}},{"type":"Feature","properties":{"id":68,"left":77.76623762199999,"top":12.996095907,"right":77.77123762199999,"bottom":12.991095907,"row_index":4,"col_index":7},"geometry":{"type":"Point","coordinates":[77.76873762199997,12.993595907]}},{"type":"Feature","properties":{"id":69,"left":77.76623762199999,"top":12.991095907,"right":77.77123762199999,"bottom":12.986095907,"row_index":5,"col_index":7},"geometry":{"type":"Point","coordinates":[77.76873762199997,12.988595907]}},{"type":"Feature","properties":{"id":70,"left":77.76623762199999,"top":12.986095907000001,"right":77.77123762199999,"bottom":12.981095907,"row_index":6,"col_index":7},"geometry":{"type":"Point","coordinates":[77.76873762199997,12.983595907]}},{"type":"Feature","properties":{"id":71,"left":77.76623762199999,"top":12.981095907,"right":77.77123762199999,"bottom":12.976095907,"row_index":7,"col_index":7},"geometry":{"type":"Point","coordinates":[77.76873762199997,12.978595907]}},{"type":"Feature","properties":{"id":75,"left":77.771237622,"top":13.006095907,"right":77.776237622,"bottom":13.001095907,"row_index":2,"col_index":8},"geometry":{"type":"Point","coordinates":[77.773737622,13.003595907]}},{"type":"Feature","properties":{"id":76,"left":77.771237622,"top":13.001095907,"right":77.776237622,"bottom":12.996095907,"row_index":3,"col_index":8},"geometry":{"type":"Point","coordinates":[77.773737622,12.998595907]}},{"type":"Feature","properties":{"id":77,"left":77.771237622,"top":12.996095907,"right":77.776237622,"bottom":12.991095907,"row_index":4,"col_index":8},"geometry":{"type":"Point","coordinates":[77.773737622,12.993595907]}},{"type":"Feature","properties":{"id":78,"left":77.771237622,"top":12.991095907,"right":77.776237622,"bottom":12.986095907,"row_index":5,"col_index":8},"geometry":{"type":"Point","coordinates":[77.773737622,12.988595907]}},{"type":"Feature","properties":{"id":79,"left":77.771237622,"top":12.986095907000001,"right":77.776237622,"bottom":12.981095907,"row_index":6,"col_index":8},"geometry":{"type":"Point","coordinates":[77.773737622,12.983595907]}},{"type":"Feature","properties":{"id":80,"left":77.771237622,"top":12.981095907,"right":77.776237622,"bottom":12.976095907,"row_index":7,"col_index":8},"geometry":{"type":"Point","coordinates":[77.773737622,12.978595907]}}]};
+var ROUTES_GEO = {"type":"FeatureCollection","name":"Routes_With_Cost","crs":{"type":"name","properties":{"name":"urn:ogc:def:crs:OGC:1.3:CRS84"}},"features":[{"type":"Feature","properties":{"centroid_id":5,"dist_km":4.509,"fuel_L":1.127,"cost_INR":107.06},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.733737622,12.993595907]]}},{"type":"Feature","properties":{"centroid_id":6,"dist_km":4.772,"fuel_L":1.193,"cost_INR":113.34},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.733737622,12.988595907]]}},{"type":"Feature","properties":{"centroid_id":14,"dist_km":4.025,"fuel_L":1.006,"cost_INR":95.57},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.738737622,12.993595907]]}},{"type":"Feature","properties":{"centroid_id":15,"dist_km":4.319,"fuel_L":1.08,"cost_INR":102.6},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.738737622,12.988595907]]}},{"type":"Feature","properties":{"centroid_id":22,"dist_km":3.292,"fuel_L":0.823,"cost_INR":78.19},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.74373762200001,12.998595907]]}},{"type":"Feature","properties":{"centroid_id":23,"dist_km":3.559,"fuel_L":0.89,"cost_INR":84.55},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.74373762200001,12.993595907]]}},{"type":"Feature","properties":{"centroid_id":24,"dist_km":3.888,"fuel_L":0.972,"cost_INR":92.34},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.74373762200001,12.988595907]]}},{"type":"Feature","properties":{"centroid_id":25,"dist_km":4.263,"fuel_L":1.066,"cost_INR":101.27},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.74373762200001,12.983595907]]}},{"type":"Feature","properties":{"centroid_id":26,"dist_km":4.674,"fuel_L":1.169,"cost_INR":111.06},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.74373762200001,12.978595907]]}},{"type":"Feature","properties":{"centroid_id":32,"dist_km":3.118,"fuel_L":0.779,"cost_INR":74.0},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.748737622,12.993595907]]}},{"type":"Feature","properties":{"centroid_id":33,"dist_km":3.488,"fuel_L":0.872,"cost_INR":82.84},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.748737622,12.988595907]]}},{"type":"Feature","properties":{"centroid_id":34,"dist_km":3.902,"fuel_L":0.976,"cost_INR":92.72},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.748737622,12.983595907]]}},{"type":"Feature","properties":{"centroid_id":35,"dist_km":4.347,"fuel_L":1.087,"cost_INR":103.27},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.748737622,12.978595907]]}},{"type":"Feature","properties":{"centroid_id":40,"dist_km":2.351,"fuel_L":0.588,"cost_INR":55.86},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.753737622,12.998595907]]}},{"type":"Feature","properties":{"centroid_id":41,"dist_km":2.713,"fuel_L":0.678,"cost_INR":64.41},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.753737622,12.993595907]]}},{"type":"Feature","properties":{"centroid_id":42,"dist_km":3.132,"fuel_L":0.783,"cost_INR":74.39},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.753737622,12.988595907]]}},{"type":"Feature","properties":{"centroid_id":43,"dist_km":3.587,"fuel_L":0.897,"cost_INR":85.22},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.753737622,12.983595907]]}},{"type":"Feature","properties":{"centroid_id":44,"dist_km":4.067,"fuel_L":1.017,"cost_INR":96.61},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.753737622,12.978595907]]}},{"type":"Feature","properties":{"centroid_id":49,"dist_km":1.939,"fuel_L":0.485,"cost_INR":46.07},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.758737622,12.998595907]]}},{"type":"Feature","properties":{"centroid_id":50,"dist_km":2.365,"fuel_L":0.591,"cost_INR":56.14},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.758737622,12.993595907]]}},{"type":"Feature","properties":{"centroid_id":51,"dist_km":2.835,"fuel_L":0.709,"cost_INR":67.35},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.758737622,12.988595907]]}},{"type":"Feature","properties":{"centroid_id":52,"dist_km":3.331,"fuel_L":0.833,"cost_INR":79.13},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.758737622,12.983595907]]}},{"type":"Feature","properties":{"centroid_id":57,"dist_km":1.164,"fuel_L":0.291,"cost_INR":27.64},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.763737622,13.003595907]]}},{"type":"Feature","properties":{"centroid_id":58,"dist_km":1.605,"fuel_L":0.401,"cost_INR":38.09},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.763737622,12.998595907]]}},{"type":"Feature","properties":{"centroid_id":59,"dist_km":2.1,"fuel_L":0.525,"cost_INR":49.88},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.763737622,12.993595907]]}},{"type":"Feature","properties":{"centroid_id":60,"dist_km":2.619,"fuel_L":0.655,"cost_INR":62.23},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.763737622,12.988595907]]}},{"type":"Feature","properties":{"centroid_id":61,"dist_km":3.149,"fuel_L":0.787,"cost_INR":74.77},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.763737622,12.983595907]]}},{"type":"Feature","properties":{"centroid_id":67,"dist_km":1.408,"fuel_L":0.352,"cost_INR":33.44},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.76873762199997,12.998595907]]}},{"type":"Feature","properties":{"centroid_id":68,"dist_km":1.954,"fuel_L":0.488,"cost_INR":46.36},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.76873762199997,12.993595907]]}},{"type":"Feature","properties":{"centroid_id":69,"dist_km":2.503,"fuel_L":0.626,"cost_INR":59.47},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.76873762199997,12.988595907]]}},{"type":"Feature","properties":{"centroid_id":70,"dist_km":3.053,"fuel_L":0.763,"cost_INR":72.48},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.76873762199997,12.983595907]]}},{"type":"Feature","properties":{"centroid_id":71,"dist_km":3.604,"fuel_L":0.901,"cost_INR":85.59},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.76873762199997,12.978595907]]}},{"type":"Feature","properties":{"centroid_id":75,"dist_km":0.87,"fuel_L":0.217,"cost_INR":20.61},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.773737622,13.003595907]]}},{"type":"Feature","properties":{"centroid_id":76,"dist_km":1.407,"fuel_L":0.352,"cost_INR":33.44},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.773737622,12.998595907]]}},{"type":"Feature","properties":{"centroid_id":77,"dist_km":1.953,"fuel_L":0.488,"cost_INR":46.36},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.773737622,12.993595907]]}},{"type":"Feature","properties":{"centroid_id":78,"dist_km":2.502,"fuel_L":0.625,"cost_INR":59.38},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.773737622,12.988595907]]}},{"type":"Feature","properties":{"centroid_id":79,"dist_km":3.052,"fuel_L":0.763,"cost_INR":72.48},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.773737622,12.983595907]]}},{"type":"Feature","properties":{"centroid_id":80,"dist_km":3.604,"fuel_L":0.901,"cost_INR":85.59},"geometry":{"type":"LineString","coordinates":[[77.7712785303343,13.01108111554822],[77.773737622,12.978595907]]}}]};
+var GRID_GEO = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{"id":5,"left":77.731237622,"top":12.996095907,"right":77.73623762199999,"bottom":12.991095907,"row_index":4,"col_index":0},"geometry":{"type":"Polygon","coordinates":[[[77.731237622,12.996095907],[77.736237622,12.996095907],[77.736237622,12.991095907],[77.731237622,12.991095907],[77.731237622,12.996095907]]]}},{"type":"Feature","properties":{"id":6,"left":77.731237622,"top":12.991095907,"right":77.73623762199999,"bottom":12.986095907,"row_index":5,"col_index":0},"geometry":{"type":"Polygon","coordinates":[[[77.731237622,12.991095907],[77.736237622,12.991095907],[77.736237622,12.986095907],[77.731237622,12.986095907],[77.731237622,12.991095907]]]}},{"type":"Feature","properties":{"id":14,"left":77.73623762199999,"top":12.996095907,"right":77.74123762199999,"bottom":12.991095907,"row_index":4,"col_index":1},"geometry":{"type":"Polygon","coordinates":[[[77.736237622,12.996095907],[77.74123762199999,12.996095907],[77.74123762199999,12.991095907],[77.736237622,12.991095907],[77.736237622,12.996095907]]]}},{"type":"Feature","properties":{"id":15,"left":77.73623762199999,"top":12.991095907,"right":77.74123762199999,"bottom":12.986095907,"row_index":5,"col_index":1},"geometry":{"type":"Polygon","coordinates":[[[77.736237622,12.991095907],[77.74123762199999,12.991095907],[77.74123762199999,12.986095907],[77.736237622,12.986095907],[77.736237622,12.991095907]]]}},{"type":"Feature","properties":{"id":22,"left":77.741237622,"top":13.001095907,"right":77.746237622,"bottom":12.996095907,"row_index":3,"col_index":2},"geometry":{"type":"Polygon","coordinates":[[[77.741237622,13.001095907],[77.746237622,13.001095907],[77.746237622,12.996095907],[77.741237622,12.996095907],[77.741237622,13.001095907]]]}},{"type":"Feature","properties":{"id":23,"left":77.741237622,"top":12.996095907,"right":77.746237622,"bottom":12.991095907,"row_index":4,"col_index":2},"geometry":{"type":"Polygon","coordinates":[[[77.741237622,12.996095907],[77.746237622,12.996095907],[77.746237622,12.991095907],[77.741237622,12.991095907],[77.741237622,12.996095907]]]}},{"type":"Feature","properties":{"id":24,"left":77.741237622,"top":12.991095907,"right":77.746237622,"bottom":12.986095907,"row_index":5,"col_index":2},"geometry":{"type":"Polygon","coordinates":[[[77.741237622,12.991095907],[77.746237622,12.991095907],[77.746237622,12.986095907],[77.741237622,12.986095907],[77.741237622,12.991095907]]]}},{"type":"Feature","properties":{"id":25,"left":77.741237622,"top":12.986095907000001,"right":77.746237622,"bottom":12.981095907,"row_index":6,"col_index":2},"geometry":{"type":"Polygon","coordinates":[[[77.741237622,12.986095907],[77.746237622,12.986095907],[77.746237622,12.981095907],[77.741237622,12.981095907],[77.741237622,12.986095907]]]}},{"type":"Feature","properties":{"id":26,"left":77.741237622,"top":12.981095907,"right":77.746237622,"bottom":12.976095907,"row_index":7,"col_index":2},"geometry":{"type":"Polygon","coordinates":[[[77.741237622,12.981095907],[77.746237622,12.981095907],[77.746237622,12.976095907],[77.741237622,12.976095907],[77.741237622,12.981095907]]]}},{"type":"Feature","properties":{"id":32,"left":77.746237622,"top":12.996095907,"right":77.75123762199999,"bottom":12.991095907,"row_index":4,"col_index":3},"geometry":{"type":"Polygon","coordinates":[[[77.746237622,12.996095907],[77.751237622,12.996095907],[77.751237622,12.991095907],[77.746237622,12.991095907],[77.746237622,12.996095907]]]}},{"type":"Feature","properties":{"id":33,"left":77.746237622,"top":12.991095907,"right":77.75123762199999,"bottom":12.986095907,"row_index":5,"col_index":3},"geometry":{"type":"Polygon","coordinates":[[[77.746237622,12.991095907],[77.751237622,12.991095907],[77.751237622,12.986095907],[77.746237622,12.986095907],[77.746237622,12.991095907]]]}},{"type":"Feature","properties":{"id":34,"left":77.746237622,"top":12.986095907000001,"right":77.75123762199999,"bottom":12.981095907,"row_index":6,"col_index":3},"geometry":{"type":"Polygon","coordinates":[[[77.746237622,12.986095907],[77.751237622,12.986095907],[77.751237622,12.981095907],[77.746237622,12.981095907],[77.746237622,12.986095907]]]}},{"type":"Feature","properties":{"id":35,"left":77.746237622,"top":12.981095907,"right":77.75123762199999,"bottom":12.976095907,"row_index":7,"col_index":3},"geometry":{"type":"Polygon","coordinates":[[[77.746237622,12.981095907],[77.751237622,12.981095907],[77.751237622,12.976095907],[77.746237622,12.976095907],[77.746237622,12.981095907]]]}},{"type":"Feature","properties":{"id":40,"left":77.75123762199999,"top":13.001095907,"right":77.75623762199999,"bottom":12.996095907,"row_index":3,"col_index":4},"geometry":{"type":"Polygon","coordinates":[[[77.751237622,13.001095907],[77.75623762199999,13.001095907],[77.75623762199999,12.996095907],[77.751237622,12.996095907],[77.751237622,13.001095907]]]}},{"type":"Feature","properties":{"id":41,"left":77.75123762199999,"top":12.996095907,"right":77.75623762199999,"bottom":12.991095907,"row_index":4,"col_index":4},"geometry":{"type":"Polygon","coordinates":[[[77.751237622,12.996095907],[77.75623762199999,12.996095907],[77.75623762199999,12.991095907],[77.751237622,12.991095907],[77.751237622,12.996095907]]]}},{"type":"Feature","properties":{"id":42,"left":77.75123762199999,"top":12.991095907,"right":77.75623762199999,"bottom":12.986095907,"row_index":5,"col_index":4},"geometry":{"type":"Polygon","coordinates":[[[77.751237622,12.991095907],[77.75623762199999,12.991095907],[77.75623762199999,12.986095907],[77.751237622,12.986095907],[77.751237622,12.991095907]]]}},{"type":"Feature","properties":{"id":43,"left":77.75123762199999,"top":12.986095907000001,"right":77.75623762199999,"bottom":12.981095907,"row_index":6,"col_index":4},"geometry":{"type":"Polygon","coordinates":[[[77.751237622,12.986095907],[77.75623762199999,12.986095907],[77.75623762199999,12.981095907],[77.751237622,12.981095907],[77.751237622,12.986095907]]]}},{"type":"Feature","properties":{"id":44,"left":77.75123762199999,"top":12.981095907,"right":77.75623762199999,"bottom":12.976095907,"row_index":7,"col_index":4},"geometry":{"type":"Polygon","coordinates":[[[77.751237622,12.981095907],[77.75623762199999,12.981095907],[77.75623762199999,12.976095907],[77.751237622,12.976095907],[77.751237622,12.981095907]]]}},{"type":"Feature","properties":{"id":49,"left":77.756237622,"top":13.001095907,"right":77.761237622,"bottom":12.996095907,"row_index":3,"col_index":5},"geometry":{"type":"Polygon","coordinates":[[[77.756237622,13.001095907],[77.761237622,13.001095907],[77.761237622,12.996095907],[77.756237622,12.996095907],[77.756237622,13.001095907]]]}},{"type":"Feature","properties":{"id":50,"left":77.756237622,"top":12.996095907,"right":77.761237622,"bottom":12.991095907,"row_index":4,"col_index":5},"geometry":{"type":"Polygon","coordinates":[[[77.756237622,12.996095907],[77.761237622,12.996095907],[77.761237622,12.991095907],[77.756237622,12.991095907],[77.756237622,12.996095907]]]}},{"type":"Feature","properties":{"id":51,"left":77.756237622,"top":12.991095907,"right":77.761237622,"bottom":12.986095907,"row_index":5,"col_index":5},"geometry":{"type":"Polygon","coordinates":[[[77.756237622,12.991095907],[77.761237622,12.991095907],[77.761237622,12.986095907],[77.756237622,12.986095907],[77.756237622,12.991095907]]]}},{"type":"Feature","properties":{"id":52,"left":77.756237622,"top":12.986095907000001,"right":77.761237622,"bottom":12.981095907,"row_index":6,"col_index":5},"geometry":{"type":"Polygon","coordinates":[[[77.756237622,12.986095907],[77.761237622,12.986095907],[77.761237622,12.981095907],[77.756237622,12.981095907],[77.756237622,12.986095907]]]}},{"type":"Feature","properties":{"id":57,"left":77.761237622,"top":13.006095907,"right":77.76623762199999,"bottom":13.001095907,"row_index":2,"col_index":6},"geometry":{"type":"Polygon","coordinates":[[[77.761237622,13.006095907],[77.766237622,13.006095907],[77.766237622,13.001095907],[77.761237622,13.001095907],[77.761237622,13.006095907]]]}},{"type":"Feature","properties":{"id":58,"left":77.761237622,"top":13.001095907,"right":77.76623762199999,"bottom":12.996095907,"row_index":3,"col_index":6},"geometry":{"type":"Polygon","coordinates":[[[77.761237622,13.001095907],[77.766237622,13.001095907],[77.766237622,12.996095907],[77.761237622,12.996095907],[77.761237622,13.001095907]]]}},{"type":"Feature","properties":{"id":59,"left":77.761237622,"top":12.996095907,"right":77.76623762199999,"bottom":12.991095907,"row_index":4,"col_index":6},"geometry":{"type":"Polygon","coordinates":[[[77.761237622,12.996095907],[77.766237622,12.996095907],[77.766237622,12.991095907],[77.761237622,12.991095907],[77.761237622,12.996095907]]]}},{"type":"Feature","properties":{"id":60,"left":77.761237622,"top":12.991095907,"right":77.76623762199999,"bottom":12.986095907,"row_index":5,"col_index":6},"geometry":{"type":"Polygon","coordinates":[[[77.761237622,12.991095907],[77.766237622,12.991095907],[77.766237622,12.986095907],[77.761237622,12.986095907],[77.761237622,12.991095907]]]}},{"type":"Feature","properties":{"id":61,"left":77.761237622,"top":12.986095907000001,"right":77.76623762199999,"bottom":12.981095907,"row_index":6,"col_index":6},"geometry":{"type":"Polygon","coordinates":[[[77.761237622,12.986095907],[77.766237622,12.986095907],[77.766237622,12.981095907],[77.761237622,12.981095907],[77.761237622,12.986095907]]]}},{"type":"Feature","properties":{"id":67,"left":77.76623762199999,"top":13.001095907,"right":77.77123762199999,"bottom":12.996095907,"row_index":3,"col_index":7},"geometry":{"type":"Polygon","coordinates":[[[77.766237622,13.001095907],[77.77123762199999,13.001095907],[77.77123762199999,12.996095907],[77.766237622,12.996095907],[77.766237622,13.001095907]]]}},{"type":"Feature","properties":{"id":68,"left":77.76623762199999,"top":12.996095907,"right":77.77123762199999,"bottom":12.991095907,"row_index":4,"col_index":7},"geometry":{"type":"Polygon","coordinates":[[[77.766237622,12.996095907],[77.77123762199999,12.996095907],[77.77123762199999,12.991095907],[77.766237622,12.991095907],[77.766237622,12.996095907]]]}},{"type":"Feature","properties":{"id":69,"left":77.76623762199999,"top":12.991095907,"right":77.77123762199999,"bottom":12.986095907,"row_index":5,"col_index":7},"geometry":{"type":"Polygon","coordinates":[[[77.766237622,12.991095907],[77.77123762199999,12.991095907],[77.77123762199999,12.986095907],[77.766237622,12.986095907],[77.766237622,12.991095907]]]}},{"type":"Feature","properties":{"id":70,"left":77.76623762199999,"top":12.986095907000001,"right":77.77123762199999,"bottom":12.981095907,"row_index":6,"col_index":7},"geometry":{"type":"Polygon","coordinates":[[[77.766237622,12.986095907],[77.77123762199999,12.986095907],[77.77123762199999,12.981095907],[77.766237622,12.981095907],[77.766237622,12.986095907]]]}},{"type":"Feature","properties":{"id":71,"left":77.76623762199999,"top":12.981095907,"right":77.77123762199999,"bottom":12.976095907,"row_index":7,"col_index":7},"geometry":{"type":"Polygon","coordinates":[[[77.766237622,12.981095907],[77.77123762199999,12.981095907],[77.77123762199999,12.976095907],[77.766237622,12.976095907],[77.766237622,12.981095907]]]}},{"type":"Feature","properties":{"id":75,"left":77.771237622,"top":13.006095907,"right":77.776237622,"bottom":13.001095907,"row_index":2,"col_index":8},"geometry":{"type":"Polygon","coordinates":[[[77.771237622,13.006095907],[77.776237622,13.006095907],[77.776237622,13.001095907],[77.771237622,13.001095907],[77.771237622,13.006095907]]]}},{"type":"Feature","properties":{"id":76,"left":77.771237622,"top":13.001095907,"right":77.776237622,"bottom":12.996095907,"row_index":3,"col_index":8},"geometry":{"type":"Polygon","coordinates":[[[77.771237622,13.001095907],[77.776237622,13.001095907],[77.776237622,12.996095907],[77.771237622,12.996095907],[77.771237622,13.001095907]]]}},{"type":"Feature","properties":{"id":77,"left":77.771237622,"top":12.996095907,"right":77.776237622,"bottom":12.991095907,"row_index":4,"col_index":8},"geometry":{"type":"Polygon","coordinates":[[[77.771237622,12.996095907],[77.776237622,12.996095907],[77.776237622,12.991095907],[77.771237622,12.991095907],[77.771237622,12.996095907]]]}},{"type":"Feature","properties":{"id":78,"left":77.771237622,"top":12.991095907,"right":77.776237622,"bottom":12.986095907,"row_index":5,"col_index":8},"geometry":{"type":"Polygon","coordinates":[[[77.771237622,12.991095907],[77.776237622,12.991095907],[77.776237622,12.986095907],[77.771237622,12.986095907],[77.771237622,12.991095907]]]}},{"type":"Feature","properties":{"id":79,"left":77.771237622,"top":12.986095907000001,"right":77.776237622,"bottom":12.981095907,"row_index":6,"col_index":8},"geometry":{"type":"Polygon","coordinates":[[[77.771237622,12.986095907],[77.776237622,12.986095907],[77.776237622,12.981095907],[77.771237622,12.981095907],[77.771237622,12.986095907]]]}},{"type":"Feature","properties":{"id":80,"left":77.771237622,"top":12.981095907,"right":77.776237622,"bottom":12.976095907,"row_index":7,"col_index":8},"geometry":{"type":"Polygon","coordinates":[[[77.771237622,12.981095907],[77.776237622,12.981095907],[77.776237622,12.976095907],[77.771237622,12.976095907],[77.771237622,12.981095907]]]}}]};
+
+var map = L.map('map').setView([12.993, 77.752], 13);
+
+var tileLayers = {
+  road: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap', maxZoom:19}),
+  sat:  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {attribution:'© Esri', maxZoom:19}),
+  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {attribution:'© CartoDB', maxZoom:19})
+};
+tileLayers.road.addTo(map);
+var curTile = 'road';
+
+function setMode(mode, btn) {
+  map.removeLayer(tileLayers[curTile]);
+  tileLayers[mode].addTo(map);
+  curTile = mode;
+  document.querySelectorAll('.mpill').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+}
+
+// Route lookup
+var routeMap = {};
+ROUTES_GEO.features.forEach(function(f){
+  var p = f.properties;
+  routeMap[p.centroid_id] = { dist_km:p.dist_km, fuel_L:p.fuel_L, cost_INR:p.cost_INR, coords:f.geometry.coordinates };
+});
+
+var maxDist = 0;
+Object.values(routeMap).forEach(function(r){ if(r.dist_km>maxDist) maxDist=r.dist_km; });
+
+var totalDist=0, totalFuel=0, totalCost=0;
+Object.values(routeMap).forEach(function(r){ totalDist+=r.dist_km; totalFuel+=r.fuel_L; totalCost+=r.cost_INR; });
+document.getElementById('ss-dist').textContent = totalDist.toFixed(1)+' km';
+document.getElementById('ss-fuel').textContent = totalFuel.toFixed(1)+' L';
+document.getElementById('ss-cost').textContent = '₹'+Math.round(totalCost).toLocaleString('en-IN');
+
+// Layer groups
+var groups = { routes:L.layerGroup().addTo(map), grid:L.layerGroup().addTo(map), hub:L.layerGroup().addTo(map) };
+var layerOn = { routes:true, grid:true, hub:true };
+
+// Zone grid
+L.geoJSON(GRID_GEO, {
+  style:{ color:'#2980b9', weight:1, opacity:0.5, fillColor:'#2980b9', fillOpacity:0.07 },
+  onEachFeature:function(f,l){
+    l.bindPopup('<div style="color:#fff;font-size:11px;padding:3px 5px;"><b style="color:#2980b9;">Cell #'+f.properties.id+'</b><br><span style="color:rgba(255,255,255,0.4);font-size:10px;">Row '+f.properties.row_index+' · Col '+f.properties.col_index+'</span></div>');
+  }
+}).addTo(groups.grid);
+
+// Route lines
+Object.values(routeMap).forEach(function(r){
+  var coords = r.coords.map(function(c){ return [c[1],c[0]]; });
+  L.polyline(coords,{color:'#c0306e',weight:1.5,opacity:0.6,dashArray:'4 6'}).addTo(groups.routes);
+});
+
+// Dump yard
+L.marker([13.011081115548221, 77.7712785303343], {
+  icon: L.divIcon({
+    html:'<div style="width:16px;height:16px;border-radius:50%;background:#facc15;border:3px solid #fff;box-shadow:0 0 14px #facc15;"></div>',
+    iconSize:[16,16], iconAnchor:[8,8], className:''
+  })
+}).bindPopup('<div style="color:#fff;font-size:12px;font-weight:700;padding:4px 6px;">🏭 Dump Yard<br><span style="font-weight:400;color:rgba(255,255,255,0.4);font-size:10px;">Hub · Whitefield</span></div>')
+  .addTo(groups.hub);
+
+// Active highlight
+var activeLine=null, activeItem=null;
+function clearActive(){
+  if(activeLine){map.removeLayer(activeLine);activeLine=null;}
+  if(activeItem){activeItem.classList.remove('active');activeItem=null;}
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+// Centroids + zone list
+var zoneItems={};
+var sorted = CENTROIDS_GEO.features.slice().sort(function(a,b){
+  return routeMap[a.properties.id].dist_km - routeMap[b.properties.id].dist_km;
+});
+var listEl = document.getElementById('zone-list');
+
+sorted.forEach(function(feat){
+  var p=feat.properties, cid=p.id;
+  var lat=feat.geometry.coordinates[1], lng=feat.geometry.coordinates[0];
+  var r=routeMap[cid];
+  var ratio=r.dist_km/maxDist;
+  var color=ratio<0.33?'#27ae60':ratio<0.66?'#e67e22':'#e74c3c';
+
+  // Marker
+  L.marker([lat,lng],{
+    icon:L.divIcon({
+      html:'<div style="width:12px;height:12px;border-radius:50%;background:'+color+';border:2px solid rgba(255,255,255,0.7);box-shadow:0 0 6px '+color+';cursor:pointer;"></div>',
+      iconSize:[12,12], iconAnchor:[6,6], className:''
+    })
+  }).addTo(groups.grid).on('click',function(){ selectZone(cid,p,r,lat,lng); });
+
+  // List row
+  var div=document.createElement('div');
+  div.className='zone-item';
+  div.innerHTML='<div class="zi-dot" style="background:'+color+'"></div>'+
+    '<div class="zi-info"><div class="zi-id">Zone #'+cid+'</div>'+
+    '<div class="zi-dist">'+r.dist_km.toFixed(2)+' km · ⛽ '+r.fuel_L.toFixed(2)+' L</div></div>'+
+    '<div class="zi-cost">₹'+r.cost_INR.toFixed(0)+'</div>';
+  div.onclick=function(){ selectZone(cid,p,r,lat,lng); map.panTo([lat,lng],{animate:true,duration:0.5}); };
+  listEl.appendChild(div);
+  zoneItems[cid]=div;
+});
+
+function selectZone(cid,props,r,lat,lng){
+  clearActive();
+  if(zoneItems[cid]){ zoneItems[cid].classList.add('active'); activeItem=zoneItems[cid]; zoneItems[cid].scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  activeLine=L.polyline([[13.011081115548221,77.7712785303343],[lat,lng]],{color:'#facc15',weight:3,opacity:0.95}).addTo(map);
+  var pct=Math.round((r.dist_km/maxDist)*100);
+  var dp=document.getElementById('detail-panel');
+  dp.innerHTML='<div class="dp-zone">Zone #'+cid+' — Row '+props.row_index+' · Col '+props.col_index+'</div>'+
+    '<div class="dp-metrics">'+
+    '<div class="dp-metric"><div class="dm-val blue">'+r.dist_km.toFixed(3)+'</div><div class="dm-lbl">km</div></div>'+
+    '<div class="dp-metric"><div class="dm-val amber">'+r.fuel_L.toFixed(3)+'</div><div class="dm-lbl">litres</div></div>'+
+    '<div class="dp-metric"><div class="dm-val green">₹'+r.cost_INR.toFixed(0)+'</div><div class="dm-lbl">cost</div></div>'+
+    '</div>'+
+    '<div class="dp-bar-lbl">Distance vs max ('+maxDist.toFixed(1)+' km)</div>'+
+    '<div class="dp-bar-track"><div class="dp-bar-fill" style="width:'+pct+'%"></div></div>'+
+    '<div class="dp-coords">📍 '+lat.toFixed(5)+'°N, '+lng.toFixed(5)+'°E</div>';
+  dp.classList.add('open');
+}
+
+function toggleLayer(key,btn){
+  layerOn[key]=!layerOn[key];
+  if(layerOn[key]){groups[key].addTo(map);btn.classList.add('active');}
+  else{map.removeLayer(groups[key]);btn.classList.remove('active');}
+}
+
+map.on('click',function(){ clearActive(); });
+</script>
+</body>
+</html>
