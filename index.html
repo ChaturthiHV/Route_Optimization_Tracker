@@ -3,6 +3,7 @@
 <head>
   <title>Geo Dashboard</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; background: #1a1a2e; }
@@ -198,17 +199,17 @@
     }
 
 
-    // ── BIND BUTTONS ───────────────────────────────────────────
-    document.getElementById('btn-road').addEventListener('click', function() {
-      switchLayer('road', this);
-    });
-    document.getElementById('btn-ndvi').addEventListener('click', function() {
-      switchLayer('ndvi', this);
-    });
-    document.getElementById('btn-node').addEventListener('click', function() {
-      switchLayer('node', this);
-    });
 
+    document.getElementById('btn-road').addEventListener('click', function() {
+  console.log('Button clicked');
+  fetch('data/whitefield.geojson')
+    .then(r => {
+      console.log('Fetch status:', r.status);
+      return r.json();
+    })
+    .then(d => console.log('Data loaded:', d))
+    .catch(e => console.error('ERROR:', e));
+});
   </script>
 </body>
 </html>
