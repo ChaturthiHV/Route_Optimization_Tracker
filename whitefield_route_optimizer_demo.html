@@ -1,0 +1,603 @@
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    font-family: var(--font-sans, sans-serif);
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    border-radius: var(--border-radius-lg);
+    border: 0.5px solid var(--color-border-tertiary);
+  }
+  .ctrl-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 10px 0 6px;
+  }
+  .ctrl-row label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .metric-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 8px 0;
+  }
+  .metric {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 8px 12px;
+  }
+  .metric .lbl {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    margin-bottom: 3px;
+  }
+  .metric .val {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+  .metric .val.green {
+    color: #3b6d11;
+  }
+  .metric .val.amber {
+    color: #ba7517;
+  }
+  .metric .val.red {
+    color: #a32d2d;
+  }
+  .legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 6px 0;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+  .leg {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .leg-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .leg-line {
+    width: 22px;
+    height: 3px;
+    flex-shrink: 0;
+    border-radius: 2px;
+  }
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 4px 0;
+  }
+  button {
+    padding: 6px 14px;
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-secondary);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: var(--color-background-primary);
+  }
+  button.active {
+    background: #e1f5ee;
+    color: #0f6e56;
+    border-color: #0f6e56;
+  }
+  .info-box {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 8px 12px;
+    margin: 6px 0;
+    line-height: 1.6;
+  }
+  .info-box strong {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+</style>
+
+<canvas id="c" height="420"></canvas>
+
+<div class="metric-row">
+  <div class="metric">
+    <div class="lbl">Total distance</div>
+    <div class="val green" id="mDist">—</div>
+  </div>
+  <div class="metric">
+    <div class="lbl">Collection points</div>
+    <div class="val" id="mPts">—</div>
+  </div>
+  <div class="metric">
+    <div class="lbl">Est. trip time</div>
+    <div class="val amber" id="mTime">—</div>
+  </div>
+  <div class="metric">
+    <div class="lbl">Route mode</div>
+    <div class="val" id="mMode" style="font-size: 13px">—</div>
+  </div>
+</div>
+
+<div class="ctrl-row">
+  <label
+    >Points
+    <input
+      type="range"
+      id="nPts"
+      min="4"
+      max="14"
+      value="7"
+      step="1"
+      style="width: 90px"
+    />
+    <span id="nPtsOut">7</span></label
+  >
+  <label
+    >Day
+    <select id="daySelect">
+      <option value="thu">Thursday</option>
+      <option value="sun">Sunday</option>
+      <option value="both">Both days</option>
+    </select>
+  </label>
+</div>
+
+<div class="btn-row">
+  <button id="btnTSP" class="active" onclick="setMode('tsp')">
+    Nearest-neighbour TSP
+  </button>
+  <button id="btnNaive" onclick="setMode('naive')">Naive (sequential)</button>
+  <button id="btnRegen" onclick="regenerate()">Randomise points</button>
+  <button id="btnAnimate" onclick="toggleAnim()">Pause</button>
+</div>
+
+<div class="legend-row">
+  <div class="leg">
+    <div class="leg-dot" style="background: #0f6e56"></div>
+    Depot (BBMP)
+  </div>
+  <div class="leg">
+    <div class="leg-dot" style="background: #534ab7"></div>
+    Thu market
+  </div>
+  <div class="leg">
+    <div class="leg-dot" style="background: #993c1d"></div>
+    Sun market
+  </div>
+  <div class="leg">
+    <div class="leg-dot" style="background: #ba7517"></div>
+    Both days
+  </div>
+  <div class="leg">
+    <div class="leg-line" style="background: #1d9e75"></div>
+    Optimised route
+  </div>
+  <div class="leg">
+    <div
+      class="leg-line"
+      style="background: #e24b4a; opacity: 0.5"
+      dashed
+    ></div>
+    Naive route
+  </div>
+</div>
+
+<div class="info-box" id="infoBox">
+  Click a collection point to see its details.
+</div>
+
+<script>
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d");
+  let W = 0,
+    H = 0,
+    dpr = 1;
+  let mode = "tsp",
+    animOn = true,
+    animT = 0,
+    animDir = 1;
+  let rafId = null;
+  let pts = [],
+    depot = {},
+    route = [];
+  let dayFilter = "thu";
+  let selectedPt = null;
+
+  const COLORS = {
+    depot: "#0F6E56",
+    thu: "#534AB7",
+    sun: "#993C1D",
+    both: "#BA7517",
+    routeOpt: "#1D9E75",
+    routeNaive: "#E24B4A",
+  };
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    W = rect.width;
+    H = 420;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.scale(dpr, dpr);
+    draw();
+  }
+
+  function randPts() {
+    const n = +document.getElementById("nPts").value;
+    const days = ["thu", "sun", "both"];
+    const pad = 60;
+    pts = [];
+    for (let i = 0; i < n; i++) {
+      const day = days[Math.floor(Math.random() * days.length)];
+      pts.push({
+        x: pad + Math.random() * (W - 2 * pad),
+        y: pad + Math.random() * (H - 2 * pad),
+        day,
+        name: "P" + (i + 1),
+        kg: Math.round(200 + Math.random() * 800),
+      });
+    }
+    depot = {
+      x: W * 0.5 + (-0.1 + Math.random() * 0.2) * W,
+      y: H * 0.45 + (-0.1 + Math.random() * 0.2) * H,
+      name: "Depot",
+    };
+    selectedPt = null;
+    buildRoute();
+  }
+
+  function activePts() {
+    if (dayFilter === "both") return pts;
+    return pts.filter((p) => p.day === dayFilter || p.day === "both");
+  }
+
+  function dist(a, b) {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  function tspNN(points, start) {
+    if (!points.length) return [];
+    const visited = new Set();
+    const route = [start];
+    let cur = start;
+    while (visited.size < points.length) {
+      let best = null,
+        bestD = Infinity;
+      for (const p of points) {
+        if (!visited.has(p)) {
+          const d = dist(cur, p);
+          if (d < bestD) {
+            bestD = d;
+            best = p;
+          }
+        }
+      }
+      if (!best) break;
+      visited.add(best);
+      route.push(best);
+      cur = best;
+    }
+    route.push(start);
+    return route;
+  }
+
+  function naiveRoute(points, start) {
+    if (!points.length) return [start, start];
+    return [start, ...points, start];
+  }
+
+  function totalDist(r) {
+    let d = 0;
+    for (let i = 0; i < r.length - 1; i++) d += dist(r[i], r[i + 1]);
+    return d;
+  }
+
+  function buildRoute() {
+    const ap = activePts();
+    if (mode === "tsp") route = tspNN(ap, depot);
+    else route = naiveRoute(ap, depot);
+    updateMetrics();
+  }
+
+  function updateMetrics() {
+    const ap = activePts();
+    const d = totalDist(route);
+    const km = (d / 60).toFixed(1);
+    const mins = Math.round((d / 60) * 3);
+    document.getElementById("mDist").textContent = km + " km";
+    document.getElementById("mPts").textContent = ap.length;
+    document.getElementById("mTime").textContent = mins + " min";
+    document.getElementById("mMode").textContent =
+      mode === "tsp" ? "Optimised" : "Naive";
+    document.getElementById("mDist").className =
+      "val " + (+km < 8 ? "green" : +km < 14 ? "amber" : "red");
+  }
+
+  function drawGrid() {
+    ctx.strokeStyle =
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--color-border-tertiary",
+      ) || "rgba(0,0,0,0.08)";
+    ctx.lineWidth = 0.5;
+    const step = 60;
+    for (let x = 0; x < W; x += step) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+    }
+    for (let y = 0; y < H; y += step) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+  }
+
+  function drawRoute(r, color, dashed) {
+    if (r.length < 2) return;
+    const progress = animOn ? Math.min(1, animT % 1.0) : 1;
+    const totalSegs = r.length - 1;
+    const drawUpTo = progress * totalSegs;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash(dashed ? [6, 4] : []);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    for (let i = 0; i < totalSegs; i++) {
+      const seg = drawUpTo - i;
+      if (seg <= 0) break;
+      const t = Math.min(1, seg);
+      const a = r[i],
+        b = r[i + 1];
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+      ctx.stroke();
+
+      if (t >= 1) {
+        const angle = Math.atan2(b.y - a.y, b.x - a.x);
+        const mx = a.x + (b.x - a.x) * 0.55,
+          my = a.y + (b.y - a.y) * 0.55;
+        ctx.save();
+        ctx.translate(mx, my);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(-7, -5);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(-7, 5);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([]);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    ctx.setLineDash([]);
+  }
+
+  function drawDistLabels(r) {
+    if (r.length < 2) return;
+    ctx.font = "10px var(--font-sans,sans-serif)";
+    ctx.fillStyle =
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--color-text-tertiary",
+      ) || "rgba(0,0,0,0.35)";
+    ctx.textAlign = "center";
+    for (let i = 0; i < r.length - 1; i++) {
+      const a = r[i],
+        b = r[i + 1];
+      const mx = (a.x + b.x) / 2,
+        my = (a.y + b.y) / 2 - 7;
+      const d = (dist(a, b) / 60).toFixed(1);
+      ctx.fillText(d + "km", mx, my);
+    }
+  }
+
+  function drawPoint(p, selected) {
+    const col = COLORS[p.day] || "#888";
+    const r = selected ? 13 : 10;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = col + "22";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, selected ? 9 : 7, 0, Math.PI * 2);
+    ctx.fillStyle = col;
+    ctx.fill();
+    ctx.font =
+      (selected ? "500 12px" : "11px") + " var(--font-sans,sans-serif)";
+    ctx.fillStyle =
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--color-text-primary",
+      ) || "#000";
+    ctx.textAlign = "center";
+    ctx.fillText(p.name, p.x, p.y - 14);
+    ctx.font = "10px var(--font-sans,sans-serif)";
+    ctx.fillStyle = col;
+    ctx.fillText(p.kg + "kg", p.x, p.y + 20);
+  }
+
+  function drawDepot() {
+    const x = depot.x,
+      y = depot.y;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 14);
+    ctx.lineTo(x + 10, y + 6);
+    ctx.lineTo(x - 10, y + 6);
+    ctx.closePath();
+    ctx.fillStyle = COLORS.depot + "33";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x, y - 12);
+    ctx.lineTo(x + 8, y + 5);
+    ctx.lineTo(x - 8, y + 5);
+    ctx.closePath();
+    ctx.fillStyle = COLORS.depot;
+    ctx.fill();
+    ctx.font = "500 11px var(--font-sans,sans-serif)";
+    ctx.fillStyle =
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--color-text-primary",
+      ) || "#000";
+    ctx.textAlign = "center";
+    ctx.fillText("Depot", x, y - 18);
+  }
+
+  function drawOrderNums(r) {
+    for (let i = 1; i < r.length - 1; i++) {
+      const p = r[i];
+      ctx.beginPath();
+      ctx.arc(p.x + 11, p.y - 11, 8, 0, Math.PI * 2);
+      ctx.fillStyle = "#1D9E75";
+      ctx.fill();
+      ctx.font = "500 10px var(--font-sans,sans-serif)";
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.fillText(i, p.x + 11, p.y - 11 + 4);
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    drawGrid();
+
+    const naive = naiveRoute(activePts(), depot);
+    if (mode === "tsp") {
+      drawRoute(naive, COLORS.routeNaive, true);
+      drawRoute(route, COLORS.routeOpt, false);
+    } else {
+      drawRoute(route, COLORS.routeNaive, true);
+    }
+
+    drawDistLabels(route);
+    activePts().forEach((p) => drawPoint(p, p === selectedPt));
+    const inactive = pts.filter((p) => p.day !== "both" && p.day !== dayFilter);
+    inactive.forEach((p) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(136,135,128,0.2)";
+      ctx.fill();
+      ctx.font = "10px var(--font-sans,sans-serif)";
+      ctx.fillStyle = "rgba(136,135,128,0.4)";
+      ctx.textAlign = "center";
+      ctx.fillText(p.name, p.x, p.y - 12);
+    });
+    drawDepot();
+    if (mode === "tsp") drawOrderNums(route);
+  }
+
+  function loop() {
+    if (animOn) {
+      animT += 0.004;
+      if (animT > 1.0) animT = 0;
+    }
+    draw();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById("btnTSP").classList.toggle("active", m === "tsp");
+    document
+      .getElementById("btnNaive")
+      .classList.toggle("active", m === "naive");
+    buildRoute();
+  }
+
+  function regenerate() {
+    randPts();
+    animT = 0;
+  }
+
+  function toggleAnim() {
+    animOn = !animOn;
+    document.getElementById("btnAnimate").textContent = animOn
+      ? "Pause"
+      : "Resume";
+  }
+
+  canvas.addEventListener("click", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left,
+      my = e.clientY - rect.top;
+    let hit = null,
+      bestD = 20;
+    for (const p of pts) {
+      const d = Math.hypot(p.x - mx, p.y - my);
+      if (d < bestD) {
+        bestD = d;
+        hit = p;
+      }
+    }
+    selectedPt = hit;
+    if (hit) {
+      const idx = route.indexOf(hit);
+      const dayLabel =
+        { thu: "Thursday", sun: "Sunday", both: "Thu + Sun" }[hit.day] ||
+        hit.day;
+      const active = hit.day === "both" || hit.day === dayFilter;
+      document.getElementById("infoBox").innerHTML =
+        `<strong>${hit.name}</strong> — ${dayLabel} market &nbsp;|&nbsp; ` +
+        `Waste: <strong>${hit.kg} kg</strong> &nbsp;|&nbsp; ` +
+        (idx > 0 && idx < route.length - 1
+          ? `Stop #${idx} in optimised route`
+          : "Inactive today") +
+        (active
+          ? ""
+          : ' <span style="color:#A32D2D">(not active on selected day)</span>');
+    } else {
+      document.getElementById("infoBox").textContent =
+        "Click a collection point to see its details.";
+    }
+    draw();
+  });
+
+  document.getElementById("nPts").addEventListener("input", function () {
+    document.getElementById("nPtsOut").textContent = this.value;
+    randPts();
+    animT = 0;
+  });
+  document.getElementById("daySelect").addEventListener("change", function () {
+    dayFilter = this.value;
+    buildRoute();
+    animT = 0;
+  });
+
+  window.addEventListener("resize", () => {
+    cancelAnimationFrame(rafId);
+    resize();
+    loop();
+  });
+  resize();
+  randPts();
+  loop();
+</script>
