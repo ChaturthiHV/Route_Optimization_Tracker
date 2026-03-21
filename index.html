@@ -289,7 +289,57 @@ html,body{height:100%;font-family:Arial,sans-serif;overflow:hidden;background:#0
 
     </div>
   </div>
+<<<<<<< HEAD
 </div>
+=======
+
+  <div id="l-bottombar">
+    <span class="lflabel">Features</span>
+    <div class="lmbtn lm-green">🌿 Area Covered</div>
+    <div class="lmbtn lm-blue">📍 Node Mapping</div>
+    <a href="wf.html" style="text-decoration:none;">
+      <div class="lmbtn" style="background:#1e8449;opacity:1;cursor:pointer;box-shadow:0 0 10px rgba(39,174,96,0.5);animation:glow 2s infinite alternate;">🌿 Green Zone Skip Route Optimizer</div>
+    </a>
+  </div>
+  <style>
+    @keyframes glow {
+      from { box-shadow: 0 0 6px rgba(39,174,96,0.4); }
+      to   { box-shadow: 0 0 16px rgba(39,174,96,0.9), 0 0 28px rgba(39,174,96,0.4); }
+    }
+  </style>
+
+</div><!-- /login-screen -->
+
+
+<!-- ═══ MAP SCREEN ═══ -->
+<div id="map-screen">
+
+  <div id="map-nav">
+    <span class="mn-brand">♻️ WasteTrack</span>
+    <span id="nav-role" style="font-size:12px;color:#27ae60;font-weight:600;"></span>
+    <div class="mn-space"></div>
+    <span class="mn-user" id="nav-user"></span>
+    <button class="mn-logout" onclick="doLogout()">← Logout</button>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="controls">
+    <button class="layer-btn" id="btn-ndvi">Green   Zone Analysis</button>
+    <button class="layer-btn" id="btn-node">Node Mapping</button>
+    <a href="wf.html" style="text-decoration:none;">
+      <button class="layer-btn" style="background:#1e8449;border:2px solid #27ae60;box-shadow:0 0 12px rgba(39,174,96,0.55);animation:ctrlGlow 2s infinite alternate;">🌿 Green Zone Skip Route Optimizer</button>
+    </a>
+  </div>
+  <style>
+    @keyframes ctrlGlow {
+      from { box-shadow: 0 0 6px rgba(39,174,96,0.4); }
+      to   { box-shadow: 0 0 18px rgba(39,174,96,0.9), 0 0 32px rgba(39,174,96,0.4); }
+    }
+  </style>
+
+</div><!-- /map-screen -->
+>>>>>>> 01a647a3e6ae0dc7d862da9a01eec31ea3ef8ff7
 
 
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
