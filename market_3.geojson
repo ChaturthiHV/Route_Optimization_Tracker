@@ -1,0 +1,11 @@
+{
+"type": "FeatureCollection",
+"name": "market_3",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "osm_id": 283807068, "name": "Arya Hub", "source": "market_3" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 77.7518963, 12.9837852 ], [ 77.7516601, 12.9831323 ], [ 77.7516638, 12.9831312 ], [ 77.7519918, 12.9830332 ], [ 77.7521754, 12.9836211 ], [ 77.7520292, 12.9837344 ], [ 77.7518963, 12.9837852 ] ] ] } },
+{ "type": "Feature", "properties": { "osm_id": 1009334204, "name": "Shell Petrol Pump Hope Farm", "source": "market_3" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 77.7517462, 12.9824784 ], [ 77.7515943, 12.9820236 ], [ 77.7518925, 12.9819256 ], [ 77.7519882, 12.9824394 ], [ 77.7517462, 12.9824784 ] ] ] } },
+{ "type": "Feature", "properties": { "osm_id": 1155197949, "name": "Unknown", "source": "market_3" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 77.7318829, 12.9880036 ], [ 77.7318595, 12.9877302 ], [ 77.7324442, 12.9876542 ], [ 77.7324812, 12.9879201 ], [ 77.7318829, 12.9880036 ] ] ] } },
+{ "type": "Feature", "properties": { "osm_id": 1226713675, "name": "Unknown", "source": "market_3" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 77.7512451, 12.979996 ], [ 77.7515276, 12.9799448 ], [ 77.7515589, 12.9801089 ], [ 77.7512764, 12.9801601 ], [ 77.7512451, 12.979996 ] ] ] } }
+]
+}
