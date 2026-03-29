@@ -568,112 +568,147 @@ L.geoJSON(getSurge('thursdayOnly'), {
   onEachFeature: function(f,l){ l.bindPopup(surgePopup(f)); }
 }).addTo(layers.surgeThu);
 
-// ── Sunday-only fixed surge zones (3 white places from QGIS screenshot) ─────
+// ── 3 QGIS Surge Points — whitish-yellow double-ring circles with name labels ─
 var SUNDAY_SURGE_ZONES = [
-  { lat:12.9837, lng:77.7518, name:'Arya Hub Junction (Sunday)', waste_kg:2200, extra_vehicles:3 },
-  { lat:12.9821, lng:77.7516, name:'Hope Farm Sunday Market',    waste_kg:1850, extra_vehicles:3 },
+  { lat:12.9837, lng:77.7518, name:'Arya Hub Junction',       waste_kg:2200, extra_vehicles:3 },
+  { lat:12.9821, lng:77.7516, name:'Hope Farm Sunday Market',  waste_kg:1850, extra_vehicles:3 },
   { lat:12.9800, lng:77.7513, name:'Channasandra Sunday Bazaar', waste_kg:1500, extra_vehicles:2 }
 ];
+
 SUNDAY_SURGE_ZONES.forEach(function(z) {
+  // Outer glow ring
   L.circle([z.lat, z.lng], {
-    radius:90, color:'#e63946', fillColor:'#e63946',
-    fillOpacity: IS_SUN ? .45 : .18, weight:2.5, dashArray: IS_SUN ? null : '5 3'
+    radius: 160,
+    color: '#fffde7',
+    weight: 1,
+    fillColor: '#fffde7',
+    fillOpacity: 0.06,
+    dashArray: '4 4',
+    interactive: false
+  }).addTo(layers.surgeSun);
+
+  // Mid ring
+  L.circle([z.lat, z.lng], {
+    radius: 100,
+    color: '#fff9c4',
+    weight: 2,
+    fillColor: '#fff9c4',
+    fillOpacity: IS_SUN ? 0.22 : 0.10,
+    dashArray: IS_SUN ? null : '6 3'
+  }).addTo(layers.surgeSun);
+
+  // Inner solid dot
+  L.circle([z.lat, z.lng], {
+    radius: 42,
+    color: '#f9a825',
+    weight: 2.5,
+    fillColor: '#fffde7',
+    fillOpacity: IS_SUN ? 0.92 : 0.72
   }).bindPopup(
-    '<div class="pop-title">🔴 '+ z.name +'</div>' +
+    '<div class="pop-title">⚪ '+ z.name +'</div>' +
     '<div class="pop-row"><span class="pop-label">Surge Type</span><span class="pop-val">Sunday Only</span></div>' +
     '<div class="pop-row"><span class="pop-label">Status</span><span class="pop-val">'+(IS_SUN?'🔴 ACTIVE':'⚪ Inactive')+'</span></div>' +
     '<div class="pop-row"><span class="pop-label">Extra Vehicles</span><span class="pop-val">+'+z.extra_vehicles+'</span></div>' +
     '<div class="pop-waste">📦 Sunday waste est.: <strong>'+z.waste_kg+' kg</strong><br>' +
     '🕐 Pickups: 06:00, 10:00, 14:00, 18:00</div>'
   ).addTo(layers.surgeSun);
+
+  // ── FIX: added display:inline-block so the border fully wraps the text ──
+  L.marker([z.lat + 0.00105, z.lng], {
+    icon: L.divIcon({
+      className: '',
+      html: '<div style="display:inline-block;background:rgba(10,14,26,0.82);color:#fff9c4;font-family:\'Space Grotesk\',sans-serif;font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid rgba(249,168,37,0.55);white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.5);">'+ z.name +'</div>',
+      iconAnchor: [0, 0]
+    }),
+    interactive: false
+  }).addTo(layers.surgeSun);
 });
 
-// ── 5 Extra Real Whitefield Markets — each with a DIFFERENT surge type ──────
-// Types covered:
-//   Thu+Sun  →  orange polygon  (both days)
-//   Thu only →  blue polygon    (thursday only)
-//   Sun only →  red circle      (sunday only)
-//   + icon markers (star/diamond/square per type for visual distinction)
-
+// ── 9 Extra Whitefield Markets
 var EXTRA_MARKETS = [
-  // 1. Whitefield Main Market — Thursday + Sunday (both)
+  // ── THU + SUN ──
   {
-    name: 'Whitefield Main Market',
-    lat: 12.9698, lng: 77.7499,
-    surge_type: 'both',
-    surge_days: 'Thursday,Sunday',
-    extra_vehicles: 4,
-    waste_kg: 3200,
-    radius: 140,
-    color: '#e07b2a',
-    icon: '🛒',
-    schedule: '06:00, 10:00, 14:00, 18:00',
-    desc: 'Largest weekly market. Heavy vegetable & fruit vendors.'
+    name: 'Whitefield Main Weekly Market',
+    lat: 12.9800, lng: 77.7500,
+    surge_type: 'both', surge_days: 'Thursday,Sunday',
+    extra_vehicles: 4, waste_kg: 3200, radius: 130, color: '#e07b2a',
+    icon: '🛒', schedule: '06:00, 10:00, 14:00, 18:00',
+    desc: 'Largest weekly market in central Whitefield. Heavy vegetable & fruit vendors.'
   },
-  // 2. ITPL Junction Market — Thursday only
   {
-    name: 'ITPL Junction Veg Market',
-    lat: 12.9876, lng: 77.7474,
-    surge_type: 'thursday',
-    surge_days: 'Thursday',
-    extra_vehicles: 2,
-    waste_kg: 1400,
-    radius: 100,
-    color: '#457b9d',
-    icon: '🥬',
-    schedule: '07:00, 13:00, 18:00',
-    desc: 'Thursday evening market near ITPL gate. Mostly organic produce.'
+    name: 'Sri Sathya Sai Market Hub',
+    lat: 13.0050, lng: 77.7600,
+    surge_type: 'both', surge_days: 'Thursday,Sunday',
+    extra_vehicles: 3, waste_kg: 2100, radius: 115, color: '#e07b2a',
+    icon: '🌽', schedule: '06:00, 11:00, 16:00',
+    desc: 'Farmer-to-consumer market near Sri Sathya Sai Hospital.'
   },
-  // 3. Mahadevapura Sunday Market — Sunday only
   {
-    name: 'Mahadevapura Sunday Market',
-    lat: 12.9948, lng: 77.7102,
-    surge_type: 'sunday',
-    surge_days: 'Sunday',
-    extra_vehicles: 3,
-    waste_kg: 2600,
-    radius: 120,
-    color: '#e63946',
-    icon: '🏪',
-    schedule: '05:30, 09:00, 13:00, 17:00',
-    desc: 'Large Sunday-only street market. High plastic & wet waste.'
+    name: 'Vibgyor Junction Market',
+    lat: 13.0100, lng: 77.7510,
+    surge_type: 'both', surge_days: 'Thursday,Sunday',
+    extra_vehicles: 3, waste_kg: 2400, radius: 115, color: '#e07b2a',
+    icon: '🍅', schedule: '07:00, 11:00, 15:00, 19:00',
+    desc: 'Busy twice-weekly market near Vibgyor school. Fruit & vegetable hub.'
   },
-  // 4. Varthur Road Farmers Market — Thursday + Sunday (both)
+  // ── THURSDAY ONLY ──
   {
-    name: 'Varthur Road Farmers Market',
-    lat: 12.9370, lng: 77.7576,
-    surge_type: 'both',
-    surge_days: 'Thursday,Sunday',
-    extra_vehicles: 3,
-    waste_kg: 2100,
-    radius: 110,
-    color: '#e07b2a',
-    icon: '🌽',
-    schedule: '06:00, 11:00, 16:00',
-    desc: 'Direct farmer-to-consumer market. High organic waste load.'
+    name: 'EPIP Zone Veg Market',
+    lat: 12.9760, lng: 77.7420,
+    surge_type: 'thursday', surge_days: 'Thursday',
+    extra_vehicles: 2, waste_kg: 1400, radius: 100, color: '#457b9d',
+    icon: '🥬', schedule: '07:00, 13:00, 18:00',
+    desc: 'Thursday market near EPIP industrial zone. Mostly organic produce.'
   },
-  // 5. Kadugodi Thursday Bazaar — Thursday only
   {
-    name: 'Kadugodi Thursday Bazaar',
-    lat: 12.9990, lng: 77.7693,
-    surge_type: 'thursday',
-    surge_days: 'Thursday',
-    extra_vehicles: 2,
-    waste_kg: 1100,
-    radius: 95,
-    color: '#457b9d',
-    icon: '🧅',
-    schedule: '08:00, 14:00, 19:00',
-    desc: 'Weekly Thursday street market. Mixed dry & wet waste.'
+    name: 'Nallurhalli Thursday Market',
+    lat: 12.9880, lng: 77.7380,
+    surge_type: 'thursday', surge_days: 'Thursday',
+    extra_vehicles: 2, waste_kg: 1100, radius: 95, color: '#457b9d',
+    icon: '🧅', schedule: '08:00, 14:00, 19:00',
+    desc: 'Weekly Thursday market near Nallurhalli. Mixed dry & wet waste.'
+  },
+  {
+    name: 'Whitefield Station Market',
+    lat: 12.9750, lng: 77.7620,
+    surge_type: 'thursday', surge_days: 'Thursday',
+    extra_vehicles: 2, waste_kg: 1250, radius: 98, color: '#457b9d',
+    icon: '🚉', schedule: '07:30, 13:00, 18:30',
+    desc: 'Thursday market near Whitefield railway station. High commuter traffic.'
+  },
+  // ── SUNDAY ONLY ──
+  {
+    name: 'Hoodi Junction Sunday Bazaar',
+    lat: 13.0000, lng: 77.7450,
+    surge_type: 'sunday', surge_days: 'Sunday',
+    extra_vehicles: 3, waste_kg: 2600, radius: 120, color: '#e63946',
+    icon: '🏪', schedule: '05:30, 09:00, 13:00, 17:00',
+    desc: 'Large Sunday street market at Hoodi junction. High plastic & wet waste.'
+  },
+  {
+    name: 'Brookefield Sunday Market',
+    lat: 12.9950, lng: 77.7680,
+    surge_type: 'sunday', surge_days: 'Sunday',
+    extra_vehicles: 3, waste_kg: 1900, radius: 105, color: '#e63946',
+    icon: '🥦', schedule: '06:00, 10:00, 15:00, 18:00',
+    desc: 'Popular Sunday market in Brookefield. High footfall, wet & organic waste.'
+  },
+  {
+    name: 'Kundalahalli Sunday Market',
+    lat: 12.9920, lng: 77.7320,
+    surge_type: 'sunday', surge_days: 'Sunday',
+    extra_vehicles: 2, waste_kg: 1600, radius: 100, color: '#e63946',
+    icon: '🧺', schedule: '06:30, 10:30, 14:30',
+    desc: 'Sunday market near Kundalahalli gate. Medium-scale, dry & wet mix.'
   }
 ];
 
-// Icon HTML per surge type (distinct shapes)
+// Icon per surge type — distinct geometric shapes
 function extraMarketIcon(type, emoji) {
   var shapes = {
-    both:     'clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)', // pentagon
-    thursday: 'clip-path:polygon(50% 0%,100% 100%,0% 100%)',                   // triangle
-    sunday:   'border-radius:3px;transform:rotate(45deg)'                       // diamond
+    both:     'clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
+    thursday: 'clip-path:polygon(50% 0%,100% 100%,0% 100%)',
+    sunday:   'border-radius:3px;transform:rotate(45deg)'
   };
   var colors = { both:'#e07b2a', thursday:'#457b9d', sunday:'#e63946' };
   var c = colors[type] || '#888';
@@ -681,36 +716,24 @@ function extraMarketIcon(type, emoji) {
   return L.divIcon({
     className:'',
     html: '<div style="position:relative;width:28px;height:28px;">' +
-          '<div style="width:28px;height:28px;background:'+c+';'+s+';border:2px solid rgba(255,255,255,.5);box-shadow:0 0 10px '+c+'aa;"></div>' +
+          '<div style="width:28px;height:28px;background:'+c+';'+s+';border:2px solid rgba(255,255,255,.55);box-shadow:0 0 10px '+c+'aa;"></div>' +
           '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)'+( type==='sunday'?'rotate(-45deg)':'')+';font-size:12px;line-height:1;">'+emoji+'</div>' +
           '</div>',
     iconSize:[28,28], iconAnchor:[14,14]
   });
 }
 
-// Also add polygon/circle overlay + marker for each extra market
 var extraMarketLayer = L.layerGroup().addTo(map);
 layers['extraMarkets'] = extraMarketLayer;
 layerOn['extraMarkets'] = true;
 
-EXTRA_MARKETS.forEach(function(m, idx) {
+EXTRA_MARKETS.forEach(function(m) {
   var isActiveToday = IS_MARKET && (
-    (m.surge_type==='both') ||
+    m.surge_type==='both' ||
     (m.surge_type==='thursday' && IS_THU) ||
-    (m.surge_type==='sunday' && IS_SUN)
+    (m.surge_type==='sunday'   && IS_SUN)
   );
 
-  // Zone circle
-  var zone = L.circle([m.lat, m.lng], {
-    radius: m.radius,
-    color: m.color,
-    fillColor: m.color,
-    fillOpacity: isActiveToday ? .32 : .12,
-    weight: isActiveToday ? 2.5 : 1.5,
-    dashArray: isActiveToday ? null : '5 4'
-  });
-
-  // Popup content
   var typeBadge = m.surge_type==='both'
     ? '<span style="background:rgba(224,123,42,.3);color:#ffcc80;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;">THU+SUN</span>'
     : m.surge_type==='thursday'
@@ -727,37 +750,92 @@ EXTRA_MARKETS.forEach(function(m, idx) {
     '<div class="pop-waste">🕐 Pickup schedule: <strong>'+m.schedule+'</strong><br>' +
     (isActiveToday ? '🔴 <strong>ACTIVE TODAY</strong> — surge crews deployed' : '⚪ Not active today') + '</div>';
 
-  zone.bindPopup(popup);
+  // Zone circle
+  L.circle([m.lat, m.lng], {
+    radius: m.radius,
+    color: m.color, fillColor: m.color,
+    fillOpacity: isActiveToday ? .30 : .11,
+    weight: isActiveToday ? 2.5 : 1.5,
+    dashArray: isActiveToday ? null : '5 4'
+  }).bindPopup(popup).addTo(extraMarketLayer);
 
-  // Marker icon
-  var marker = L.marker([m.lat, m.lng], { icon: extraMarketIcon(m.surge_type, m.icon) })
-    .bindPopup(popup);
+  // Shaped marker with emoji
+  L.marker([m.lat, m.lng], { icon: extraMarketIcon(m.surge_type, m.icon) })
+    .bindPopup(popup).addTo(extraMarketLayer);
 
-  zone.addTo(extraMarketLayer);
-  marker.addTo(extraMarketLayer);
+  // ── FIX: added display:inline-block so the border fully wraps the text ──
+  L.marker([m.lat - 0.0010, m.lng], {
+    icon: L.divIcon({
+      className: '',
+      html: '<div style="display:inline-block;background:rgba(10,14,26,0.80);color:'+m.color+';font-family:\'Space Grotesk\',sans-serif;font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid '+m.color+'55;white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.5);">'+ m.name +'</div>',
+      iconAnchor: [0, 0]
+    }),
+    interactive: false
+  }).addTo(extraMarketLayer);
 
-  // Also plug into appropriate surge layer for filtering
-  if (m.surge_type === 'both') {
-    zone.addTo(layers.surgeboth);
-  } else if (m.surge_type === 'thursday') {
-    zone.addTo(layers.surgeThu);
-  } else {
-    zone.addTo(layers.surgeSun);
-  }
+  // Wire into surge type layers
+  var targetLayer = m.surge_type==='both' ? layers.surgeboth
+                  : m.surge_type==='thursday' ? layers.surgeThu
+                  : layers.surgeSun;
+  L.circle([m.lat, m.lng], {
+    radius: m.radius, color: m.color, fillColor: m.color,
+    fillOpacity: 0, weight: 1, dashArray: '3 5', interactive: false
+  }).addTo(targetLayer);
 });
 
-// ─── WASTE COLLECTION ROUTES (polyline overlaid on roads) ──────────────────
+// ─── FULL CONNECTION NETWORK ─────────────────────────────────────────────────
 var routeColors = ['#54a0ff','#5f27cd','#00d2d3','#ff9f43'];
 var centroids = MARKET_ZONES.features.map(extractCentroid).filter(Boolean);
+
+var ALL_POINTS = [
+  [12.9800, 77.7500],
+  [13.0050, 77.7600],
+  [13.0100, 77.7510],
+  [12.9760, 77.7420],
+  [12.9880, 77.7380],
+  [12.9750, 77.7620],
+  [13.0000, 77.7450],
+  [12.9950, 77.7680],
+  [12.9920, 77.7320],
+  [12.9837, 77.7518],
+  [12.9821, 77.7516],
+  [12.9800, 77.7513]
+];
+
+var LOOP = [0,8,4,3,9,10,11,0,5,1,7,2,6,0];
+var CROSS = [
+  [0,9],[0,4],[0,6],[1,7],[1,2],[2,6],[3,8],[4,9],[5,7],[5,1],[6,2],[8,4],[9,10],[10,11],[11,9]
+];
+
+var connLayer = L.layerGroup().addTo(map);
+layers['connectionNet'] = connLayer;
+layerOn['connectionNet'] = true;
+
+for (var i=0; i<LOOP.length-1; i++) {
+  L.polyline([ALL_POINTS[LOOP[i]], ALL_POINTS[LOOP[i+1]]], {
+    color: IS_MARKET ? '#54a0ff' : '#2d5f8a',
+    weight: IS_MARKET ? 2.5 : 1.8,
+    opacity: IS_MARKET ? 0.80 : 0.45
+  }).bindPopup('<div class="pop-title">♻️ Market Connection Route</div><div class="pop-waste">Waste vehicles travel this corridor on Thur & Sun</div>')
+  .addTo(connLayer);
+}
+CROSS.forEach(function(e) {
+  L.polyline([ALL_POINTS[e[0]], ALL_POINTS[e[1]]], {
+    color: IS_MARKET ? '#00d2d3' : '#1a5f60',
+    weight: IS_MARKET ? 1.5 : 1.2,
+    opacity: IS_MARKET ? 0.55 : 0.30,
+    dashArray: '5 5'
+  }).addTo(connLayer);
+});
+
 if (centroids.length >= 2) {
   var routeLatLngs = centroids.map(c => [c[1], c[0]]);
-  routeLatLngs.push(routeLatLngs[0]); // close loop
+  routeLatLngs.push(routeLatLngs[0]);
   L.polyline(routeLatLngs, {
-    color:'#54a0ff', weight:3.5, opacity:.7,
-    dashArray: IS_MARKET ? null : '8 5'
+    color:'#f9a825', weight: IS_MARKET ? 2.5 : 1.5, opacity:.70,
+    dashArray: IS_MARKET ? null : '6 4'
   }).bindPopup(
-    '<div class="pop-title">♻️ Waste Collection Route</div>' +
-    '<div class="pop-row"><span class="pop-label">Distance</span><span class="pop-val">~4.2 km</span></div>' +
+    '<div class="pop-title">⚡ Primary Surge Zone Loop</div>' +
     '<div class="pop-row"><span class="pop-label">Vehicles</span><span class="pop-val">'+(IS_MARKET?4:2)+'</span></div>' +
     '<div class="pop-row"><span class="pop-label">Status</span><span class="pop-val">'+(IS_MARKET?'🟢 Active':'🟡 Normal')+'</span></div>'
   ).addTo(layers.wasteRoute);
@@ -808,8 +886,7 @@ function toggleLayer(key) {
 
 // ─── FIT BOUNDS ─────────────────────────────────────────────────────────────
 function fitBounds() {
-  // Encompass all markets including the 5 extra ones spread across Whitefield
-  map.fitBounds([[12.930, 77.705],[13.005, 77.778]], { padding:[30,30] });
+  map.fitBounds([[12.9743, 77.7312],[13.0161, 77.7785]], { padding:[28,28] });
 }
 
 // ─── SURGE ROUTES TOGGLE ─────────────────────────────────────────────────────
@@ -826,7 +903,6 @@ function toggleQuickOSM() {
   if (qosmActive) {
     btn.style.background='rgba(244,162,97,.3)'; btn.style.borderColor='var(--accent)';
     btn.textContent = '🗂️ QuickOSM Active';
-    // Simulate QuickOSM market/highway overlay — draw bounding boxes around surge zones
     MARKET_ZONES.features.forEach(function(f) {
       var c = extractCentroid(f);
       if (!c) return;
@@ -864,7 +940,6 @@ function showNotif(msg, type) {
 
 // ─── BUILD RIGHT PANEL ───────────────────────────────────────────────────────
 function buildPanel() {
-  // Today alert
   var alertHTML = '';
   if (IS_SUN) {
     alertHTML = '<div class="surge-alert"><div class="surge-title">🔴 Sunday Market Surge Active</div><div class="surge-body">High-frequency routes activated. Extra vehicles deployed to all market zones. Expect 3× waste volume.</div></div>';
@@ -875,7 +950,6 @@ function buildPanel() {
   }
   document.getElementById('today-alert').innerHTML = alertHTML;
 
-  // Waste stats
   var totalZones = MARKET_ZONES.features.length + 3 + EXTRA_MARKETS.length;
   var surgeVeh   = MARKET_ZONES.features.reduce((a,f)=>a+(f.properties.extra_vehicles||0),0) + 9 + EXTRA_MARKETS.reduce((a,m)=>a+m.extra_vehicles,0);
   var wasteBase  = totalZones * 680;
@@ -886,7 +960,6 @@ function buildPanel() {
     '<div class="stat-box '+(IS_SUN?'red':'blue')+'"><div class="stat-val">'+(IS_SUN?'SUN':'THU')+'</div><div class="stat-lbl">Surge Day</div></div>' +
     '<div class="stat-box green"><div class="stat-val">+'+ surgeVeh +'</div><div class="stat-lbl">Extra Veh.</div></div>';
 
-  // Route list
   var rl = '';
   MARKET_ZONES.features.forEach(function(f,i) {
     var p = f.properties;
@@ -899,14 +972,13 @@ function buildPanel() {
           '<div class="route-meta">+'+p.extra_vehicles+' veh · OSM '+p.osm_id+'</div>' +
           '</div>';
   });
-  // Add Sunday-only zones
-  ['Sunday Surge Zone 1','Sunday Surge Zone 2','Sunday Surge Zone 3'].forEach(function(n,i){
+  var QGIS_NAMES = ['Arya Hub Junction','Hope Farm Sunday Market','Channasandra Sunday Bazaar'];
+  QGIS_NAMES.forEach(function(n){
     rl += '<div class="route-item">' +
-          '<div class="route-title"><span class="route-badge rb-sun">SUN</span> '+n+'</div>' +
-          '<div class="route-meta">+3 veh · Sunday Only · High Priority</div>' +
+          '<div class="route-title"><span class="route-badge rb-sun">SUN</span> ⚪ '+n+'</div>' +
+          '<div class="route-meta">QGIS Surge Point · Sunday Only · High Priority</div>' +
           '</div>';
   });
-  // Add 5 extra Whitefield markets
   EXTRA_MARKETS.forEach(function(m, i) {
     var badge = m.surge_type==='both'
       ? '<span class="route-badge rb-both">THU+SUN</span>'
@@ -921,7 +993,6 @@ function buildPanel() {
   });
   document.getElementById('route-list').innerHTML = rl;
 
-  // Schedule
   var sch = [
     { day:'Monday–Wed',    time:'07:00, 15:00',  color:'#636e72', active:false },
     { day:'Thursday',      time:'06:00–18:00 ×4', color:'#457b9d', active:IS_THU },
@@ -936,19 +1007,16 @@ function buildPanel() {
     '</div>'
   ).join('');
 
-  // Weight bars — existing zones
   var zones = MARKET_ZONES.features.map(f => ({
     name: (f.properties.name||'Zone').substring(0,18),
     weight: Math.round(40 + Math.random()*60),
     color: (f.properties.surge_days||'').includes('Thursday') && (f.properties.surge_days||'').includes('Sunday') ? '#e07b2a' : '#e63946'
   }));
-  // Sunday surge zones
   zones = zones.concat([
-    { name:'Sunday Surge 1', weight:88, color:'#e63946' },
-    { name:'Sunday Surge 2', weight:74, color:'#e63946' },
-    { name:'Sunday Surge 3', weight:62, color:'#e63946' },
+    { name:'Arya Hub Junction',    weight:88, color:'#f9a825' },
+    { name:'Hope Farm Sun Market', weight:74, color:'#f9a825' },
+    { name:'Channasandra Bazaar',  weight:62, color:'#f9a825' },
   ]);
-  // 5 extra Whitefield markets
   var typeColors = { both:'#e07b2a', thursday:'#457b9d', sunday:'#e63946' };
   EXTRA_MARKETS.forEach(function(m) {
     zones.push({
@@ -991,7 +1059,6 @@ function togglePanel(side) {
   }
   setTimeout(function(){ map.invalidateSize(); }, 320);
 }
-// Set initial toggle button positions
 document.getElementById('panel-toggle-btn').style.left='280px';
 document.getElementById('panel-toggle-btn').textContent='‹ Layers';
 document.getElementById('rp-toggle-btn').style.right='300px';
@@ -999,7 +1066,7 @@ document.getElementById('rp-toggle-btn').textContent='Analytics ›';
 
 // ─── AUTO-ACTIVATE SURGE ROUTES ON MARKET DAYS ───────────────────────────────
 if (IS_MARKET) {
-  toggleLayer('surgeRoutes'); // auto-enable
+  toggleLayer('surgeRoutes');
   showNotif('⚡ ' + (IS_SUN?'Sunday':'Thursday') + ' — Surge routes auto-activated!');
 }
 
@@ -1009,10 +1076,5 @@ fitBounds();
 setTimeout(function(){ map.invalidateSize(); }, 200);
 
 </script>
-
-<!-- ── PYTHON EXPORT HINT (hidden comment) ──
-To save all layers as GeoJSON/Shapefiles from QGIS, see python_save_layers.py
--->
-
 </body>
 </html>
