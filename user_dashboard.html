@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WasteTrack — User Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700;900&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; font-family:'Barlow', Arial, sans-serif; overflow:hidden; background:#0a0e1a; color:#fff; }
+
+  /* ── TOP NAV ── */
+  #topnav {
+    position:fixed; top:0; left:0; right:0; z-index:1000;
+    height:50px; background:rgba(10,14,26,0.96);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    display:flex; align-items:center; padding:0 16px; gap:12px;
+  }
+  .tn-brand { font-size:15px; font-weight:700; letter-spacing:.3px; }
+  .tn-badge {
+    font-size:10px; font-weight:700; padding:3px 8px; border-radius:2px;
+    background:rgba(220,68,56,0.2); border:1px solid rgba(220,68,56,0.4);
+    color:#ff6b6b; text-transform:uppercase; letter-spacing:.8px;
+  }
+  .tn-space { flex:1; }
+  .tn-live-dot { width:7px; height:7px; border-radius:50%; background:#4caf50; box-shadow:0 0 8px #4caf50; animation:blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+  .tn-live { font-size:11px; color:#4caf50; font-weight:700; }
+  .tn-back {
+    font-size:12px; padding:6px 12px; border-radius:3px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+    color:rgba(255,255,255,0.5); cursor:pointer; text-decoration:none;
+    transition:all .18s; font-family:'Barlow',sans-serif; font-weight:600;
+  }
+  .tn-back:hover { color:#fff; border-color:rgba(255,255,255,0.3); }
+
+  /* ── VIEW TOGGLE ── */
+  .view-toggle {
+    display:flex; align-items:center; gap:0;
+    border:1px solid rgba(255,255,255,0.12); border-radius:4px; overflow:hidden;
+  }
+  .vt-btn {
+    padding:6px 13px; border:none; background:rgba(255,255,255,0.05);
+    font-family:'Barlow',sans-serif; font-size:11px; font-weight:700;
+    color:rgba(255,255,255,0.38); cursor:pointer; letter-spacing:.4px;
+    transition:all .18s; border-right:1px solid rgba(255,255,255,0.08);
+    display:flex; align-items:center; gap:5px;
+  }
+  .vt-btn:last-child { border-right:none; }
+  .vt-btn:hover { color:rgba(255,255,255,.7); background:rgba(255,255,255,0.09); }
+  .vt-btn.active-sat  { background:rgba(33,150,243,.25); color:#64b5f6; }
+  .vt-btn.active-road { background:rgba(255,152,0,.22);  color:#ffb74d; }
+  .vt-btn.active-dark { background:rgba(103,58,183,.25); color:#ce93d8; }
+
+  /* ── LAYOUT ── */
+  #layout {
+    display:flex; height:100vh; padding-top:50px; padding-bottom:56px;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width:280px; flex-shrink:0;
+    background:#0d1120; border-right:1px solid rgba(255,255,255,0.07);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .sb-title {
+    padding:14px 16px 10px;
+    font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+    color:rgba(255,255,255,0.25); border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+
+  /* vehicle cards */
+  .veh-card {
+    margin:8px 10px 0; padding:12px;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
+    border-radius:4px; cursor:pointer; transition:all .2s; border-left:3px solid transparent;
+  }
+  .veh-card:hover { background:rgba(255,255,255,0.07); }
+  .veh-card.active { border-left-color:var(--c); background:rgba(255,255,255,0.06); }
+  .vc-top { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .vc-icon {
+    width:32px; height:32px; border-radius:3px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; background:rgba(255,255,255,0.08); flex-shrink:0;
+  }
+  .vc-name { font-size:13px; font-weight:700; }
+  .vc-route { font-size:10px; color:rgba(255,255,255,0.33); margin-top:1px; }
+  .vc-status {
+    margin-left:auto; font-size:9px; font-weight:700; padding:2px 7px;
+    border-radius:2px; text-transform:uppercase; letter-spacing:.6px;
+  }
+  .vc-status.moving  { background:rgba(76,175,80,.2); color:#4caf50; }
+  .vc-status.stopped { background:rgba(255,152,0,.2); color:#ff9800; }
+  .vc-status.dumping { background:rgba(220,68,56,.2); color:#ff6b6b; }
+
+  /* progress bar */
+  .vc-prog-wrap { display:flex; align-items:center; gap:6px; }
+  .vc-prog-bar { flex:1; height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
+  .vc-prog-fill { height:100%; border-radius:2px; transition:width .5s ease; }
+  .vc-prog-pct { font-size:10px; font-weight:700; font-family:'Share Tech Mono', monospace; }
+
+  /* collection stops list */
+  .vc-stops { margin-top:8px; display:flex; flex-direction:column; gap:3px; }
+  .vcs {
+    display:flex; align-items:center; gap:6px;
+    font-size:10px; color:rgba(255,255,255,0.35); padding:2px 0;
+  }
+  .vcs.done  { color:rgba(76,175,80,.7); }
+  .vcs.curr  { color:#fff; font-weight:600; }
+  .vcs-dot   { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+  .vcs-line  {
+    position:absolute; left:2px; top:6px; width:2px;
+    background:rgba(255,255,255,0.1); border-radius:1px;
+  }
+
+  /* stats panel */
+  .sb-stats {
+    margin:10px 10px 0; padding:10px;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
+    border-radius:4px; display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  }
+  .ss { text-align:center; }
+  .ss-v { font-size:18px; font-weight:900; font-family:'Share Tech Mono', monospace; }
+  .ss-l { font-size:9px; color:rgba(255,255,255,0.25); text-transform:uppercase; letter-spacing:.5px; margin-top:1px; }
+
+  /* legend */
+  .sb-legend {
+    margin:10px 10px 0; padding:10px;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
+    border-radius:4px;
+  }
+  .sb-leg-title { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,0.25); margin-bottom:7px; }
+  .leg-item { display:flex; align-items:center; gap:7px; font-size:11px; color:rgba(255,255,255,0.45); margin-bottom:4px; }
+  .leg-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .leg-line { width:18px; height:3px; border-radius:1px; flex-shrink:0; }
+
+  .sb-foot {
+    margin-top:auto; padding:10px 14px;
+    font-size:10px; color:rgba(255,255,255,0.15);
+    border-top:1px solid rgba(255,255,255,0.05);
+    text-align:center;
+  }
+
+  /* ── MAP ── */
+  #map { flex:1; position:relative; }
+
+  /* ── INFO TOAST ── */
+  #toast {
+    position:fixed; top:60px; right:16px; z-index:2000;
+    background:rgba(10,14,26,0.95); border:1px solid rgba(255,255,255,0.12);
+    border-radius:4px; padding:10px 14px; min-width:200px; max-width:260px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.6);
+    display:none; animation:slideIn .2s ease;
+  }
+  #toast.show { display:block; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)} }
+  .toast-title { font-size:12px; font-weight:700; margin-bottom:4px; }
+  .toast-body  { font-size:11px; color:rgba(255,255,255,0.45); line-height:1.5; }
+
+  /* ── BOTTOM BAR ── */
+  #bottombar {
+    position:fixed; bottom:0; left:0; right:0; z-index:1000;
+    height:56px; background:#0c1120; border-top:1px solid rgba(255,255,255,0.07);
+    display:flex; align-items:center; padding:0 16px; gap:20px;
+  }
+  .bb-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:rgba(255,255,255,0.2); }
+  .bb-seg { display:flex; align-items:center; gap:7px; }
+  .bb-dot  { width:8px; height:8px; border-radius:50%; }
+  .bb-line { width:20px; height:3px; border-radius:1px; }
+  .bb-txt  { font-size:11px; color:rgba(255,255,255,0.38); }
+  .bb-space { flex:1; }
+  .bb-info { font-size:11px; color:rgba(255,255,255,0.2); font-family:'Share Tech Mono',monospace; }
+
+  /* ── LOADING OVERLAY ── */
+  #road-loading {
+    position:fixed; inset:0; z-index:9999;
+    background:rgba(10,14,26,0.92);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  }
+  #road-loading.hidden { display:none; }
+  .rl-spinner {
+    width:38px; height:38px; border:3px solid rgba(255,255,255,0.1);
+    border-top-color:#ffb74d; border-radius:50%; animation:spin .8s linear infinite;
+  }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .rl-txt { font-size:13px; color:rgba(255,255,255,0.55); font-family:'Share Tech Mono',monospace; }
+  .rl-sub { font-size:10px; color:rgba(255,255,255,0.25); }
+
+  /* Leaflet overrides */
+  .leaflet-popup-content-wrapper {
+    background:rgba(10,14,26,0.95) !important; border:1px solid rgba(255,255,255,0.12) !important;
+    color:#fff !important; border-radius:4px !important; box-shadow:0 8px 24px rgba(0,0,0,.6) !important;
+  }
+  .leaflet-popup-tip { background:rgba(10,14,26,0.95) !important; }
+  .leaflet-popup-content { font-family:'Barlow',sans-serif; font-size:12px; line-height:1.6; margin:8px 10px !important; }
+  .pop-title { font-size:13px; font-weight:700; margin-bottom:4px; }
+  .pop-sub   { color:rgba(255,255,255,0.4); font-size:11px; }
+  .pop-badge { display:inline-block; padding:2px 7px; border-radius:2px; font-size:9px; font-weight:700; text-transform:uppercase; margin-top:4px; }
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="road-loading">
+  <div class="rl-spinner"></div>
+  <div class="rl-txt">🛣️ Calculating Road Routes…</div>
+  <div class="rl-sub">Fetching real road paths for all 3 routes</div>
+</div>
+
+<!-- TOP NAV -->
+<div id="topnav">
+  <span class="tn-brand">♻️ WasteTrack</span>
+  <span class="tn-badge">User View</span>
+  <div class="tn-space"></div>
+  <div class="tn-live-dot"></div>
+  <span class="tn-live">LIVE TRACKING</span>
+  &nbsp;&nbsp;
+  <div class="view-toggle">
+    <button class="vt-btn active-sat" id="vt-sat" onclick="setView('sat')">🛰️ Satellite</button>
+    <button class="vt-btn" id="vt-road" onclick="setView('road')">🛣️ Road</button>
+    <button class="vt-btn" id="vt-dark" onclick="setView('dark')">🌑 Dark</button>
+  </div>
+  &nbsp;&nbsp;
+  <a class="tn-back" href="login2.html">← Back to Login</a>
+</div>
+
+<!-- INFO TOAST -->
+<div id="toast">
+  <div class="toast-title" id="toast-title"></div>
+  <div class="toast-body"  id="toast-body"></div>
+</div>
+
+<!-- LAYOUT -->
+<div id="layout">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-title">Live Fleet — 3 Routes</div>
+
+    <!-- Vehicle cards injected by JS -->
+    <div id="veh-list"></div>
+
+    <!-- Stats -->
+    <div class="sb-stats">
+      <div class="ss"><div class="ss-v" style="color:#4caf50" id="stat-active">3</div><div class="ss-l">Active</div></div>
+      <div class="ss"><div class="ss-v" style="color:#1976d2" id="stat-stops">0</div><div class="ss-l">Stops Done</div></div>
+      <div class="ss"><div class="ss-v" style="color:#ff9800" id="stat-collected">0.0t</div><div class="ss-l">Collected</div></div>
+      <div class="ss"><div class="ss-v" style="color:#9c27b0" id="stat-eta">—</div><div class="ss-l">Next ETA</div></div>
+    </div>
+
+    <!-- Legend -->
+    <div class="sb-legend">
+      <div class="sb-leg-title">Map Legend</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#dc4438"></div> Route A — Whitefield Main</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#1976d2"></div> Route B — Marathahalli</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#2e7d32"></div> Route C — ITPL Zone</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#4caf50; border:2px solid #fff"></div> Collection Point</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#f44336; border:2px solid #fff"></div> Dumping Point</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#ffd600; border:2px solid #333"></div> Truck (moving)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#ff9800; border:2px solid #333"></div> Truck (collecting)</div>
+    </div>
+
+    <div class="sb-foot">Whitefield Waste Management · Bengaluru</div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div id="bottombar">
+  <span class="bb-label">Routes:</span>
+  <div class="bb-seg"><div class="bb-dot" style="background:#dc4438"></div><span class="bb-txt">Route A</span></div>
+  <div class="bb-seg"><div class="bb-dot" style="background:#1976d2"></div><span class="bb-txt">Route B</span></div>
+  <div class="bb-seg"><div class="bb-dot" style="background:#2e7d32"></div><span class="bb-txt">Route C</span></div>
+  <div class="bb-seg"><div class="bb-dot" style="background:#4caf50;border:1px solid #fff"></div><span class="bb-txt">Collection</span></div>
+  <div class="bb-seg"><div class="bb-dot" style="background:#f44336;border:1px solid #fff"></div><span class="bb-txt">Dumping</span></div>
+  <div class="bb-space"></div>
+  <span class="bb-info" id="bb-time">--:--:--</span>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA  — 3 routes, each with collection points + 1 dump
+// ═══════════════════════════════════════════════════════════
+const ROUTES = [
+  {
+    id: 'A',
+    name: 'WF-001',
+    label: 'Route A — Whitefield Main',
+    color: '#dc4438',
+    emoji: '🔴',
+    speed: 0.00012, // degrees per tick
+    waitTicks: 60,  // ticks to wait at collection point
+    collectTons: 0.9,
+    waypoints: [
+      // collection points (start & stops)
+      { lat:12.9816, lng:77.7501, type:'collection', name:'Whitefield Gate CP',   area:'Whitefield Main Rd' },
+      { lat:12.9803, lng:77.7455, type:'collection', name:'Hoodi Junction CP',    area:'Hoodi Main' },
+      { lat:12.9780, lng:77.7410, type:'collection', name:'Nallurahalli CP',       area:'Nallurahalli Rd' },
+      { lat:12.9760, lng:77.7370, type:'collection', name:'Brookefield CP',        area:'Brookefield Layout' },
+      { lat:12.9735, lng:77.7330, type:'collection', name:'Mahadevpura CP',        area:'Mahadevpura Main' },
+      // dumping point at end
+      { lat:12.9700, lng:77.7260, type:'dump',       name:'Whitefield Depot Dump', area:'Dump Yard A' }
+    ]
+  },
+  {
+    id: 'B',
+    name: 'WF-002',
+    label: 'Route B — Marathahalli',
+    color: '#1976d2',
+    emoji: '🔵',
+    speed: 0.00010,
+    waitTicks: 55,
+    collectTons: 1.1,
+    waypoints: [
+      { lat:12.9567, lng:77.7010, type:'collection', name:'Marathahalli Bridge CP', area:'Marathahalli' },
+      { lat:12.9590, lng:77.7060, type:'collection', name:'EPIP Zone CP',           area:'EPIP Main' },
+      { lat:12.9620, lng:77.7115, type:'collection', name:'Kundalahalli CP',        area:'Kundalahalli Colony' },
+      { lat:12.9655, lng:77.7160, type:'collection', name:'Doddanakundi CP',        area:'Doddanakundi Rd' },
+      { lat:12.9688, lng:77.7200, type:'collection', name:'Garudachar Palya CP',    area:'Garudachar Layout' },
+      { lat:12.9720, lng:77.7250, type:'dump',       name:'Marathahalli Dump Yard', area:'Dump Yard B' }
+    ]
+  },
+  {
+    id: 'C',
+    name: 'WF-003',
+    label: 'Route C — ITPL Zone',
+    color: '#2e7d32',
+    emoji: '🟢',
+    speed: 0.00011,
+    waitTicks: 50,
+    collectTons: 0.8,
+    waypoints: [
+      { lat:12.9872, lng:77.7205, type:'collection', name:'ITPL Main Gate CP',     area:'ITPL Road' },
+      { lat:12.9851, lng:77.7248, type:'collection', name:'Sadaramangala CP',      area:'Sadaramangala' },
+      { lat:12.9833, lng:77.7288, type:'collection', name:'Siddapura CP',          area:'Siddapura Layout' },
+      { lat:12.9815, lng:77.7335, type:'collection', name:'Ramamurthy Nagar CP',   area:'Ram Nagar' },
+      { lat:12.9800, lng:77.7378, type:'collection', name:'Banaswadi CP',          area:'Banaswadi Rd' },
+      { lat:12.9780, lng:77.7420, type:'dump',       name:'ITPL Dump Station',     area:'Dump Yard C' }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════════
+//  MAP INIT
+// ═══════════════════════════════════════════════════════════
+const map = L.map('map', { zoomControl:true }).setView([12.9750, 77.7280], 14);
+
+// ── TILE LAYERS ──
+const TILE_DEFS = {
+  sat: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attr: '© Esri World Imagery',
+    filter: 'brightness(0.85) saturate(1.1)'
+  },
+  road: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attr: '© OpenStreetMap',
+    filter: 'brightness(0.92) saturate(0.85)'
+  },
+  dark: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attr: '© OpenStreetMap',
+    filter: 'brightness(0.28) saturate(0.4) hue-rotate(200deg) invert(0.05)'
+  }
+};
+
+const tileStyle = document.createElement('style');
+tileStyle.id = 'tile-filter-style';
+tileStyle.textContent = `.map-tiles { filter: ${TILE_DEFS.sat.filter}; }`;
+document.head.appendChild(tileStyle);
+
+let currentTileLayer = L.tileLayer(TILE_DEFS.sat.url, {
+  attribution: TILE_DEFS.sat.attr,
+  className: 'map-tiles'
+}).addTo(map);
+
+let currentView = 'sat';
+
+function setView(type) {
+  if (type === currentView) return;
+  currentView = type;
+  // swap tile layer
+  map.removeLayer(currentTileLayer);
+  const def = TILE_DEFS[type];
+  currentTileLayer = L.tileLayer(def.url, {
+    attribution: def.attr,
+    className: 'map-tiles'
+  }).addTo(map);
+  currentTileLayer.bringToBack();
+  // update filter
+  document.getElementById('tile-filter-style').textContent =
+    `.map-tiles { filter: ${def.filter}; }`;
+  // update button states
+  ['sat','road','dark'].forEach(v => {
+    const btn = document.getElementById('vt-' + v);
+    btn.className = 'vt-btn' + (v === type ? ' active-' + v : '');
+  });
+}
+
+// ── fetch one road segment from OSRM ──
+async function fetchRoadSegment(from, to) {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?geometries=geojson&overview=full`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.routes && data.routes.length > 0) {
+      return data.routes[0].geometry.coordinates.map(c => ({ lat: c[1], lng: c[0] }));
+    }
+  } catch(e) {}
+  // fallback: straight line with intermediate points
+  const pts = [];
+  for (let i = 0; i <= 10; i++) {
+    pts.push({ lat: from.lat + (to.lat - from.lat) * i/10,
+               lng: from.lng + (to.lng - from.lng) * i/10 });
+  }
+  return pts;
+}
+
+// ── draw static route polylines (will be updated after road fetch) ──
+const routePolylines = ROUTES.map(r => {
+  const pts = r.waypoints.map(w => [w.lat, w.lng]);
+  return L.polyline(pts, { color:r.color, weight:4, opacity:0.5, dashArray:'8 5' }).addTo(map);
+});
+
+// ── collection & dump markers ──
+function makeIcon(type, color) {
+  const bg = type === 'dump' ? '#f44336' : '#4caf50';
+  const sym = type === 'dump' ? '🗑️' : '🟢';
+  const html = `
+    <div style="
+      width:28px;height:28px;border-radius:50%;
+      background:${bg};border:2px solid #fff;
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,0.5);
+    ">${type==='dump'?'✕':'●'}</div>`;
+  return L.divIcon({ html, className:'', iconSize:[28,28], iconAnchor:[14,14] });
+}
+
+const collectionMarkers = {}; // key: routeId-wpIndex
+
+ROUTES.forEach(r => {
+  r.waypoints.forEach((w, i) => {
+    const m = L.marker([w.lat, w.lng], { icon:makeIcon(w.type, r.color) })
+      .addTo(map)
+      .bindPopup(`
+        <div class="pop-title">${w.name}</div>
+        <div class="pop-sub">${w.area}</div>
+        <span class="pop-badge" style="background:${w.type==='dump'?'rgba(244,67,54,.25)':'rgba(76,175,80,.25)'}; color:${w.type==='dump'?'#ff6b6b':'#4caf50'}">
+          ${w.type==='dump'?'DUMP POINT':'COLLECTION POINT'}
+        </span>
+      `);
+    collectionMarkers[`${r.id}-${i}`] = m;
+  });
+});
+
+// ── truck markers ──
+function truckIcon(color, angle) {
+  return L.divIcon({
+    html:`<div style="
+      width:30px;height:30px;border-radius:4px;
+      background:${color};border:2px solid #fff;
+      display:flex;align-items:center;justify-content:center;
+      font-size:15px;box-shadow:0 0 12px ${color}88;
+      transform:rotate(${angle}deg);
+    ">🚛</div>`,
+    className:'', iconSize:[30,30], iconAnchor:[15,15]
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATE — animation engine
+// ═══════════════════════════════════════════════════════════
+const state = ROUTES.map(r => ({
+  route: r,
+  wpIdx: 0,          // current target waypoint index
+  lat: r.waypoints[0].lat,
+  lng: r.waypoints[0].lng,
+  status: 'stopped', // stopped | moving | dumping | done
+  waitLeft: r.waitTicks, // ticks remaining at current stop
+  collected: 0,
+  stopsCompleted: 0,
+  progress: 0,       // 0-100%
+  marker: null,
+  trail: [],         // last N positions for trail
+  trailPoly: null,
+  cycleCount: 0,
+  segPts: [],        // road points for current leg
+  segPtIdx: 0,       // index within segPts
+}));
+
+// create truck markers
+state.forEach((s, i) => {
+  s.marker = L.marker([s.lat, s.lng], { icon:truckIcon(s.route.color, 0), zIndexOffset:1000 })
+    .addTo(map)
+    .on('click', () => focusTruck(i));
+  s.trailPoly = L.polyline([], { color:s.route.color, weight:2, opacity:.4, dashArray:'4 3' }).addTo(map);
+});
+
+// ═══════════════════════════════════════════════════════════
+//  SIDEBAR CARDS
+// ═══════════════════════════════════════════════════════════
+function buildSidebar() {
+  const el = document.getElementById('veh-list');
+  el.innerHTML = state.map((s,i) => {
+    const r = s.route;
+    const stops = r.waypoints.map((w,j) => {
+      const done = j < s.wpIdx;
+      const curr = j === s.wpIdx;
+      return `<div class="vcs ${done?'done':''}${curr?' curr':''}">
+        <div class="vcs-dot"></div>
+        <span>${w.name.replace(' CP','').replace(' Dump','')}</span>
+        ${done?'<span style="margin-left:auto;font-size:9px;color:#4caf50">✓</span>':''}
+      </div>`;
+    }).join('');
+    return `
+    <div class="veh-card" id="vc-${i}" style="--c:${r.color}" onclick="focusTruck(${i})">
+      <div class="vc-top">
+        <div class="vc-icon">${r.emoji}</div>
+        <div>
+          <div class="vc-name">${r.name}</div>
+          <div class="vc-route">${r.label}</div>
+        </div>
+        <div class="vc-status moving" id="vs-${i}">Moving</div>
+      </div>
+      <div class="vc-prog-wrap">
+        <div class="vc-prog-bar"><div class="vc-prog-fill" id="vp-${i}" style="width:0%;background:${r.color}"></div></div>
+        <span class="vc-prog-pct" id="vpp-${i}" style="color:${r.color}">0%</span>
+      </div>
+      <div class="vc-stops" id="vstops-${i}">${stops}</div>
+    </div>`;
+  }).join('');
+}
+buildSidebar();
+
+// ═══════════════════════════════════════════════════════════
+//  FOCUS TRUCK
+// ═══════════════════════════════════════════════════════════
+function focusTruck(i) {
+  const s = state[i];
+  map.setView([s.lat, s.lng], 15, { animate:true });
+  document.querySelectorAll('.veh-card').forEach(c => c.classList.remove('active'));
+  document.getElementById(`vc-${i}`).classList.add('active');
+  showToast(s);
+}
+
+// ── toast ──
+let toastTimer;
+function showToast(s) {
+  const r = s.route;
+  const wp = r.waypoints[Math.min(s.wpIdx, r.waypoints.length-1)];
+  document.getElementById('toast-title').textContent = `${r.emoji} ${r.name} — ${r.label}`;
+  document.getElementById('toast-body').innerHTML =
+    `Status: <b style="color:${statusColor(s.status)}">${s.status.toUpperCase()}</b><br>
+     At: ${wp.name}<br>
+     Collected: <b>${s.collected.toFixed(1)}t</b> | Stops: <b>${s.stopsCompleted}</b><br>
+     Progress: <b>${Math.round(s.progress)}%</b>`;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function statusColor(st) {
+  return st==='moving'?'#4caf50': st==='stopped'?'#ff9800': st==='dumping'?'#ff6b6b':'#aaa';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ANIMATION TICK
+// ═══════════════════════════════════════════════════════════
+let tick = 0;
+let totalStops = 0;
+let totalCollected = 0;
+
+function lerp(a, b, t) { return a + (b-a)*t; }
+
+function moveTruck(s) {
+  const r = s.route;
+  const wps = r.waypoints;
+
+  if (s.status === 'stopped' || s.status === 'dumping') {
+    s.waitLeft--;
+    if (s.waitLeft <= 0) {
+      if (s.wpIdx < wps.length - 1) {
+        s.wpIdx++;
+        s.status = 'moving';
+        // Load road segment for this leg
+        const segs = r.roadSegments;
+        s.segPts = (segs && segs[s.wpIdx - 1]) ? segs[s.wpIdx - 1] : [
+          { lat: wps[s.wpIdx-1].lat, lng: wps[s.wpIdx-1].lng },
+          { lat: wps[s.wpIdx].lat,   lng: wps[s.wpIdx].lng   }
+        ];
+        s.segPtIdx = 0;
+        if (wps[s.wpIdx].type === 'collection') { s.collected += r.collectTons; s.stopsCompleted++; }
+      } else {
+        // reached dump — restart from beginning
+        s.status = 'dumping';
+        if (s.waitLeft <= -r.waitTicks) {
+          s.wpIdx = 0;
+          s.lat = wps[0].lat; s.lng = wps[0].lng;
+          s.status = 'stopped';
+          s.waitLeft = r.waitTicks;
+          s.collected = 0;
+          s.cycleCount++;
+          s.trail = [];
+          s.segPts = [];
+          s.segPtIdx = 0;
+        }
+      }
+    }
+    return;
+  }
+
+  // moving — advance along road path points
+  const seg = s.segPts;
+  if (!seg || seg.length < 2) {
+    // straight-line fallback
+    const target = wps[s.wpIdx];
+    const dlat = target.lat - s.lat, dlng = target.lng - s.lng;
+    const dist = Math.sqrt(dlat*dlat + dlng*dlng);
+    if (dist < r.speed * 1.5) {
+      s.lat = target.lat; s.lng = target.lng;
+      s.status = target.type === 'dump' ? 'dumping' : 'stopped';
+      s.waitLeft = r.waitTicks;
+    } else {
+      s.lat += dlat * r.speed / dist;
+      s.lng += dlng * r.speed / dist;
+    }
+  } else {
+    // move toward next road point
+    const nextIdx = Math.min(s.segPtIdx + 1, seg.length - 1);
+    const nextPt  = seg[nextIdx];
+    const dlat = nextPt.lat - s.lat, dlng = nextPt.lng - s.lng;
+    const dist = Math.sqrt(dlat*dlat + dlng*dlng);
+
+    if (dist < r.speed * 1.5) {
+      // snap to next road point
+      s.segPtIdx = nextIdx;
+      s.lat = seg[s.segPtIdx].lat;
+      s.lng = seg[s.segPtIdx].lng;
+      // if this was the last point in the segment → reached waypoint
+      if (s.segPtIdx >= seg.length - 1) {
+        const target = wps[s.wpIdx];
+        s.lat = target.lat; s.lng = target.lng;
+        s.status = target.type === 'dump' ? 'dumping' : 'stopped';
+        s.waitLeft = r.waitTicks;
+      }
+    } else {
+      s.lat += dlat * r.speed / dist;
+      s.lng += dlng * r.speed / dist;
+    }
+  }
+
+  // trail
+  s.trail.push([s.lat, s.lng]);
+  if (s.trail.length > 80) s.trail.shift();
+  s.trailPoly.setLatLngs(s.trail);
+
+  // progress
+  const total = wps.length - 1;
+  const segLen = seg ? seg.length : 1;
+  s.progress = Math.min(100,
+    ((s.wpIdx - 1 + (s.segPtIdx / Math.max(segLen - 1, 1))) / total) * 100
+  );
+  if (s.progress < 0) s.progress = 0;
+}
+
+function updateUI(s, i) {
+  const r = s.route;
+  // marker
+  s.marker.setLatLng([s.lat, s.lng]);
+  const angle = s.status === 'moving' ? 0 : 0;
+  s.marker.setIcon(truckIcon(s.status === 'stopped' ? '#ff9800' : s.status === 'dumping' ? '#f44336' : r.color, angle));
+
+  // sidebar status
+  const vs = document.getElementById(`vs-${i}`);
+  if (vs) {
+    vs.textContent = s.status === 'moving' ? 'Moving' : s.status === 'dumping' ? 'Dumping' : 'Collecting';
+    vs.className = 'vc-status ' + (s.status === 'moving' ? 'moving' : s.status === 'dumping' ? 'dumping' : 'stopped');
+  }
+
+  // progress bar
+  const prog = Math.max(0, Math.min(100, s.wpIdx / (r.waypoints.length-1) * 100));
+  const vp = document.getElementById(`vp-${i}`);
+  const vpp = document.getElementById(`vpp-${i}`);
+  if (vp) vp.style.width = prog + '%';
+  if (vpp) vpp.textContent = Math.round(prog) + '%';
+
+  // stops list — rebuild on change only
+  const vstops = document.getElementById(`vstops-${i}`);
+  if (vstops) {
+    vstops.innerHTML = r.waypoints.map((w,j) => {
+      const done = j < s.wpIdx;
+      const curr = j === s.wpIdx;
+      return `<div class="vcs ${done?'done':''}${curr?' curr':''}">
+        <div class="vcs-dot"></div>
+        <span>${w.name.replace(' CP','').replace(' Dump','').replace(' Yard','')}</span>
+        ${done?'<span style="margin-left:auto;font-size:9px;color:#4caf50">✓</span>':''}
+      </div>`;
+    }).join('');
+  }
+}
+
+function updateStats() {
+  let stops = 0, col = 0;
+  state.forEach(s => { stops += s.stopsCompleted; col += s.collected; });
+  document.getElementById('stat-stops').textContent = stops;
+  document.getElementById('stat-collected').textContent = col.toFixed(1) + 't';
+
+  // next ETA rough (which truck has least waypoints to go)
+  let minWp = 99, etaTruck = null;
+  state.forEach(s => {
+    const rem = s.route.waypoints.length - 1 - s.wpIdx;
+    if (rem < minWp) { minWp = rem; etaTruck = s; }
+  });
+  document.getElementById('stat-eta').textContent = etaTruck ? (minWp * 2) + 'm' : '—';
+}
+
+// ── clock ──
+function updateClock() {
+  const now = new Date();
+  document.getElementById('bb-time').textContent =
+    now.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+// ── main loop (started after roads loaded) ──
+let animLoop = null;
+function startAnimLoop() {
+  animLoop = setInterval(() => {
+    tick++;
+    state.forEach((s,i) => {
+      moveTruck(s);
+      updateUI(s, i);
+    });
+    if (tick % 30 === 0) updateStats();
+    if (tick % 100 === 0) updateClock();
+  }, 80);
+}
+
+// ── Road route init ──
+async function initRoadRoutes() {
+  const overlay = document.getElementById('road-loading');
+  const loadTxt = overlay.querySelector('.rl-txt');
+
+  for (let ri = 0; ri < ROUTES.length; ri++) {
+    const r = ROUTES[ri];
+    loadTxt.textContent = `🛣️ Loading ${r.label}…`;
+    r.roadSegments = [];
+    for (let i = 0; i < r.waypoints.length - 1; i++) {
+      const pts = await fetchRoadSegment(r.waypoints[i], r.waypoints[i+1]);
+      r.roadSegments.push(pts);
+    }
+    // Redraw this route's polyline with road geometry
+    const flatPts = r.roadSegments.flat().map(p => [p.lat, p.lng]);
+    routePolylines[ri].setLatLngs(flatPts);
+  }
+
+  overlay.classList.add('hidden');
+
+  // auto-fit map
+  const allPts = ROUTES.flatMap(r => r.waypoints.map(w => [w.lat, w.lng]));
+  map.fitBounds(allPts, { padding:[30,30] });
+
+  setTimeout(() => focusTruck(0), 400);
+  startAnimLoop();
+}
+
+initRoadRoutes();
+</script>
+</body>
+</html>
