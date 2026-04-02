@@ -11,6 +11,8 @@ A browser-based, real-time waste collection route optimization dashboard for the
 ├── login2.html                         # Alternate login page (Material-style)
 ├── user_dashboard.html                 # Live vehicle tracking view for residents
 ├── cutter.html                         # Dead-Mileage Cutter — route cost analysis
+├── wf.html
+# Green Zone Skip Route Optimiser - Skipping green areas
 ├── density.html                        # Density-wise Collection — zone heatmap
 ├── market.html                         # Market Day Surge Mapper
 ├── whitefield_route_optimizer_demo.html # TSP route optimizer canvas demo
@@ -52,6 +54,11 @@ A browser-based, real-time waste collection route optimization dashboard for the
 - Per-zone cost breakdown: distance (km), fuel (L), cost (₹)
 - Interactive zone list with detail panel
 - Toggleable layers: routes, zone grid, dump yard
+
+### 🌿 Green Zone Skip Route Optimizer(`wf.html`)
+- Detects low or no waste areas and represents them as a **green coloured layer (parks or green areas)**, while waste-generating zones are shown as a **yellow coloured layer (buildings, residential, commercial areas)**  
+- Removes green zones from the planned route to avoid unnecessary stops and redundant coverage 
+- Focuses collection only on yellow layer zones, ensuring routes cover only active waste-generating areas 
 
 ### 📊 Density-wise Collection (`density.html`)
 - Raster overlay showing waste generation density across the grid
