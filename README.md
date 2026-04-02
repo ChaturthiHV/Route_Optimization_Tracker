@@ -11,7 +11,7 @@ A browser-based, real-time waste collection route optimization dashboard for the
 ├── login2.html                         # Alternate login page (Material-style)
 ├── user_dashboard.html                 # Live vehicle tracking view for residents
 ├── cutter.html                         # Dead-Mileage Cutter — route cost analysis
-├── wf.html                                # Green Zone Skip Route Optimizer - skipping green areas
+├── wf.html                              # Green Zone Skip Route Optimizer - skipping green areas
 ├── density.html                        # Density-wise Collection — zone heatmap
 ├── market.html                         # Market Day Surge Mapper
 ├── whitefield_route_optimizer_demo.html # TSP route optimizer canvas demo
