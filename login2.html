@@ -257,29 +257,27 @@
   .mbtn-blue  { background:#1565c0; }
   /* ── RESPONSIVE ── */
 @media (max-width: 600px) {
-  .topbar { padding: 0 10px; gap: 6px; }
-  .tb-sub  { display: none; }
-  .center  { padding: 10px; align-items: flex-start; padding-top: 20px; }
-  .card    { max-width: 100%; }
-  .card-head { padding: 14px 14px 10px; }
-  .panel   { padding: 16px 14px; }
-  .tabs .tab { font-size: 11px; padding: 9px 4px; gap: 4px; }
-  .stats   { flex-wrap: wrap; }
-  .stats .stat { min-width: calc(50% - 4px); }
-  .cfoot   { flex-wrap: wrap; gap: 10px; padding: 8px 14px 14px; }
-  .bottombar { gap: 6px; padding: 0 8px; }
-  .mbtn    { padding: 8px 10px; font-size: 11px; }
-  .flabel  { display: none; }
+  html, body { overflow: auto !important; }
   .shell { min-height: 100vh; height: auto; }
-  .center { align-items: flex-start; padding: 16px; padding-top: 24px; }
-  .card { max-width: 100%; font-size: 15px; }
+  .topbar { padding: 0 10px; gap: 6px; }
+  .tb-sub { display: none; }
+  .center { padding: 16px; align-items: flex-start; padding-top: 24px; flex: none; }
+  .card { max-width: 100%; }
+  .card-head { padding: 16px 16px 12px; }
   .ch-title { font-size: 16px; }
   .ch-sub { font-size: 13px; }
+  .panel { padding: 18px 16px; }
+  .tabs .tab { font-size: 13px; padding: 12px 4px; gap: 4px; }
   .f input { font-size: 15px; padding: 13px 12px 13px 36px; }
   .f label { font-size: 12px; }
   .sbtn { font-size: 15px; padding: 14px; }
-  .tab { font-size: 13px; padding: 12px 6px; }
+  .stats { flex-wrap: wrap; }
+  .stats .stat { min-width: calc(50% - 4px); }
   .sv { font-size: 20px; }
+  .cfoot { flex-wrap: wrap; gap: 10px; padding: 8px 14px 14px; }
+  .bottombar { gap: 6px; padding: 0 8px; }
+  .mbtn { padding: 8px 10px; font-size: 11px; }
+  .flabel { display: none; }
 }
 </style>
 </head>
