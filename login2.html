@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>WasteTrack — Login</title>
 <link rel="icon" type="image/png" href="WT.png" sizes="264x264">
 
@@ -12,7 +12,7 @@
   html, body {
     height: 100%; width: 100%;
     font-family: 'Roboto', Arial, sans-serif;
-    overflow: hidden;
+    overflow: auto;
     background: #0a0e1a;
     color: #fff;
   }
@@ -24,6 +24,7 @@
     overflow: hidden;
   }
 
+  /* road lines */
   .bg::before {
     content: '';
     position: absolute; inset: 0;
@@ -40,6 +41,7 @@
     to   { background-position: 120px 120px, 120px 120px, 30px 30px, 30px 30px; }
   }
 
+  /* green patches (parks) */
   .bg::after {
     content: '';
     position: absolute; inset: 0;
@@ -49,6 +51,7 @@
       radial-gradient(ellipse 100px 80px at 50% 80%, rgba(56,142,60,0.12) 0%, transparent 70%);
   }
 
+  /* blue water patches */
   .water1, .water2 {
     position: absolute;
     border-radius: 40% 60% 55% 45%;
@@ -62,12 +65,18 @@
     50%      { transform: scale(1.05) rotate(3deg); }
   }
 
-  .road { position: absolute; background: rgba(255,200,80,0.15); transform-origin: center; }
+  /* diagonal roads */
+  .road {
+    position: absolute;
+    background: rgba(255,200,80,0.15);
+    transform-origin: center;
+  }
   .road1 { width:4px; height:200%; top:-50%; left:35%; transform:rotate(25deg); }
   .road2 { width:3px; height:200%; top:-50%; left:60%; transform:rotate(-15deg); }
   .road3 { width:100%; height:3px; top:45%; left:0; }
   .road4 { width:100%; height:2px; top:70%; left:0; opacity:0.6; }
 
+  /* dark overlay */
   .overlay {
     position: fixed; inset: 0; z-index: 1;
     background: linear-gradient(
@@ -78,18 +87,16 @@
     );
   }
 
-  /* ── SHELL: flex column, full viewport, no scroll on body ── */
   .shell {
-    position: fixed; inset: 0; z-index: 2;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    min-height: 100vh;
   }
 
-  /* ── TOP BAR — always visible at top ── */
+
+  /* ── TOP BAR ── */
   .topbar {
-    flex-shrink: 0;
-    height: 50px;
+    height: 50px; flex-shrink: 0;
     background: rgba(10,14,26,0.92);
     border-bottom: 1px solid rgba(255,255,255,0.08);
     display: flex; align-items: center;
@@ -106,14 +113,10 @@
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
   .tb-live  { font-size: 11px; color: #4caf50; font-weight: 600; }
 
-  /* ── CENTER: fills remaining space, card scrolls inside if needed ── */
+  /* ── CENTER ── */
   .center {
     flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     padding: 16px;
   }
 
@@ -225,74 +228,64 @@
   .cfoot a { font-size:11px; color:rgba(255,255,255,0.27); text-decoration:none; transition:color 0.18s; }
   .cfoot a:hover { color:rgba(255,255,255,0.65); }
 
-  /* ── MOBILE FIXES ── */
+  /* ── BOTTOM BAR ── */
+  .bottombar {
+    height:62px; flex-shrink:0;
+    background:#0c1120;
+    border-top:1px solid rgba(255,255,255,0.07);
+    display:flex; align-items:center; justify-content:center;
+    gap:10px; padding:0 20px;
+  }
+  .flabel {
+    font-size:11px; font-weight:700;
+    color:rgba(255,255,255,0.2);
+    text-transform:uppercase; letter-spacing:0.5px;
+    margin-right:4px;
+  }
+  .mbtn {
+    padding:9px 18px; border:none; border-radius:3px;
+    font-family:inherit; font-size:13px; font-weight:600;
+    color:#fff; cursor:pointer;
+    display:flex; align-items:center; gap:7px;
+    transition:filter 0.18s, transform 0.12s;
+    letter-spacing:0.2px;
+  }
+  .mbtn:hover  { filter:brightness(1.15); }
+  .mbtn:active { transform:scale(0.97); }
+  .mbtn-red   { background:#dc4438; }
+  .mbtn-green { background:#2e7d32; }
+  .mbtn-blue  { background:#1565c0; }
+  /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
-
-    /* body and shell stay fixed — no page scroll */
-    html, body { overflow: hidden !important; }
-
-    /* center scrolls internally if card taller than screen */
+    html, body { overflow: auto !important; }
+    .shell { min-height: 100vh; height: auto; }
     .center {
       align-items: flex-start !important;
       padding: 12px !important;
+      padding-top: 20px !important;
     }
-
-    /* card fills full width, no margin gaps */
-    .card {
-      max-width: 100% !important;
-      width: 100% !important;
-      border-radius: 10px;
-    }
-
-    /* topbar compact */
-    .topbar { padding: 0 12px; gap: 6px; }
+    .card { max-width: 100% !important; width: 100% !important; }
+    .topbar { padding: 0 10px; gap: 6px; }
     .tb-sub { display: none; }
-
-    /* card header bigger text */
     .card-head { padding: 16px 16px 12px; }
     .ch-title { font-size: 16px; }
-    .ch-sub   { font-size: 12px; }
-    .ch-icon  { width: 44px; height: 44px; font-size: 22px; }
-
-    /* tabs bigger tap target */
-    .tabs { }
-    .tab { font-size: 13px; padding: 14px 6px; gap: 5px; }
-
-    /* panel padding */
-    .panel { padding: 18px 16px 14px; }
-
-    /* inputs — large enough for thumbs, no zoom on focus (16px+ prevents zoom) */
-    .f label { font-size: 12px; letter-spacing: 0.5px; }
-    .f input {
-      font-size: 16px !important; /* prevents iOS auto-zoom */
-      padding: 14px 14px 14px 38px;
-      border-radius: 6px;
-    }
-    .iw span { font-size: 15px; left: 12px; }
-    .f { margin-bottom: 16px; }
-
-    /* submit button */
-    .sbtn {
-      font-size: 16px;
-      padding: 15px;
-      border-radius: 6px;
-      margin-top: 6px;
-    }
-
-    /* stats */
+    .ch-sub { font-size: 13px; }
+    .panel { padding: 18px 16px; }
+    .tab { font-size: 13px; padding: 12px 4px; gap: 4px; }
+    .f input { font-size: 15px; padding: 13px 12px 13px 36px; }
+    .f label { font-size: 12px; }
+    .sbtn { font-size: 15px; padding: 14px; }
     .stats { flex-wrap: wrap; }
-    .stat { min-width: calc(50% - 4px); padding: 10px 4px; }
-    .sv { font-size: 22px; }
-    .sl { font-size: 10px; }
-
-    /* footer links */
-    .cfoot { flex-wrap: wrap; gap: 12px; padding: 10px 16px 18px; }
-    .cfoot a { font-size: 13px; }
+    .stat { min-width: calc(50% - 4px); }
+    .sv { font-size: 20px; }
+    .cfoot { flex-wrap: wrap; gap: 10px; padding: 8px 14px 14px; }
+    .flabel { display: none; }
   }
 </style>
 </head>
 <body>
 
+<!-- animated background — no Leaflet needed -->
 <div class="bg">
   <div class="water1"></div>
   <div class="water2"></div>
@@ -305,7 +298,7 @@
 
 <div class="shell">
 
-  <!-- top bar — always at top, never pushed off screen -->
+  <!-- top bar -->
   <div class="topbar">
     <span class="tb-brand">♻️ WasteTrack</span>
     <span class="tb-sub">Whitefield Waste Management · Bengaluru</span>
@@ -314,7 +307,7 @@
     <span class="tb-live">LIVE</span>
   </div>
 
-  <!-- scrollable area containing the card -->
+  <!-- card -->
   <div class="center">
     <div class="card">
 
@@ -375,6 +368,9 @@
 
     </div>
   </div>
+
+  <!-- bottom bar -->
+ 
 
 </div>
 
