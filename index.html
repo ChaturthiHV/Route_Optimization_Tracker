@@ -157,6 +157,7 @@
     display: none;
     flex-direction: column;
     height: 100vh;
+    height: 100svh;
     overflow: hidden;
   }
   #map-screen.visible { display: flex; }
@@ -183,11 +184,11 @@
   #map { flex:1; width:100%; min-height:0; }
 
   #l-bottombar {
-    height:62px; flex-shrink:0;
+    height:auto; flex-shrink:0; flex-wrap:wrap;
     background:#0c1120;
     border-top:1px solid rgba(255,255,255,0.07);
     display:flex; align-items:center; justify-content:center;
-    gap:10px; padding:0 20px;
+    gap:6px; padding:6px;
   }
   .lflabel { font-size:11px; font-weight:700; color:rgba(255,255,255,0.2); text-transform:uppercase; letter-spacing:0.5px; margin-right:4px; }
   .lmbtn {
@@ -498,12 +499,12 @@
     setTimeout(function(){ map.invalidateSize(); }, 100);
   }
 
-// Fix 100vh on mobile browsers (address bar eats viewport)
-function setMobileVH() {
-  document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
+function fixMobileHeight() {
+  var ms = document.getElementById('map-screen');
+  if (ms && window.innerWidth <= 768) ms.style.height = window.innerHeight + 'px';
 }
-setMobileVH();
-window.addEventListener('resize', setMobileVH);
+fixMobileHeight();
+window.addEventListener('resize', fixMobileHeight);
 </script>
 </body>
 </html>
