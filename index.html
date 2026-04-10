@@ -203,70 +203,62 @@
   .lm-red   { background:#c0392b; }
   .lm-green { background:#27ae60; }
   .lm-blue  { background:#2980b9; }
-/* ── RESPONSIVE: Mobile Fix for Bottom Feature Bar ── */
+/* ── MOBILE FIX: Bottom Feature Bar Visible ── */
 @media (max-width: 768px) {
 
-  /* Allow the whole page to be a scrollable column */
-  html, body { overflow: auto !important; }
-  #login-screen {
-    height: auto !important;
-    min-height: 100vh;
-    overflow: auto !important;
+  /* Use dvh (dynamic viewport) so browser chrome is excluded */
+  #map-screen {
+    height: 100dvh !important;
+    height: -webkit-fill-available !important;
   }
 
-  /* Topbar: hide subtitle to save space */
-  #l-topbar { padding: 0 10px; gap: 6px; }
-  #l-topbar span:nth-child(2) { display: none; }
-
-  /* Login card: full width, smaller padding */
-  .l-center { padding: 10px; align-items: flex-start; padding-top: 14px; }
-  .login-card { max-width: 100% !important; border-radius: 4px; }
-  .lc-head  { padding: 12px 14px 10px; }
-  .lpanel   { padding: 14px 14px; }
-
-  /* Depot stats: 2x2 grid instead of 4 in a row */
-  .lstats {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+  /* Fallback: shrink map so bottombar always has room */
+  #map {
+    flex: 1 !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 50px - 116px) !important; /* 50px topbar + 116px bottombar */
   }
 
-  /* Tabs: smaller text */
-  .ltabs .ltab { font-size: 11px; padding: 9px 4px; gap: 3px; }
-
-  /* ★ BOTTOM FEATURE BAR — the main fix ★
-     Auto height + 2-column grid so all 6 buttons are visible */
+  /* Bottom bar: 2-column grid instead of single cramped row */
   #l-bottombar {
     height: auto !important;
+    flex-shrink: 0 !important;
     display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    padding: 8px !important;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    grid-template-columns: 1fr 1fr !important;
+    gap: 5px !important;
+    padding: 6px !important;
+    padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
     background: #0c1120;
+    border-top: 1px solid rgba(255,255,255,0.12);
   }
-  .lmbtn {
-    width: 100%;
-    padding: 10px 6px !important;
-    font-size: 11px !important;
-    text-align: center;
-    border-radius: 4px;
-    white-space: normal;
-    line-height: 1.3;
-    height: auto !important;
-  }
-  /* Make nav links (a tags wrapping buttons) fill the grid cell */
-  #l-bottombar a {
-    display: block;
-    text-decoration: none;
-  }
-  #l-bottombar a .lmbtn { width: 100%; }
-}
 
-@media (max-width: 380px) {
-  /* Very small phones: single column */
-  #l-bottombar { grid-template-columns: 1fr; }
-  .lstats { grid-template-columns: 1fr 1fr; }
+  /* Each button fills its grid cell */
+  .lmbtn {
+    width: 100% !important;
+    font-size: 11px !important;
+    padding: 9px 5px !important;
+    white-space: normal !important;
+    text-align: center !important;
+    height: auto !important;
+    line-height: 1.3 !important;
+    border-radius: 4px !important;
+  }
+
+  /* Fix anchor tags wrapping the buttons */
+  #l-bottombar a {
+    display: block !important;
+    text-decoration: none !important;
+  }
+  #l-bottombar a > div {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Hide "FEATURES" label to save space */
+  .flabel { display: none !important; }
+
+  /* Top nav: hide subtitle */
+  #map-nav .mn-brand + span { display: none; }
 }
 </style>
 </head>
@@ -506,6 +498,12 @@
     setTimeout(function(){ map.invalidateSize(); }, 100);
   }
 
+// Fix 100vh on mobile browsers (address bar eats viewport)
+function setMobileVH() {
+  document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
+}
+setMobileVH();
+window.addEventListener('resize', setMobileVH);
 </script>
 </body>
 </html>
