@@ -250,71 +250,109 @@
     100% { opacity:1; stroke-width:2; }
   }
   .surge-active-layer { animation: surgePulse 2s infinite; }
+  /* FAB hidden on desktop */
+  #mobile-fab { display: none; }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
 
-    /* -- TOPNAV -- */
+    /* -- TOPNAV: slimmer -- */
     .nav-back  { padding: 4px 8px; font-size: 11px; }
     .nav-brand { font-size: 12px; }
     .nav-badge { display: none; }
     .nav-day   { font-size: 10px; padding: 3px 7px; }
 
-    /* -- VIEW BAR: smaller, stays centered -- */
-    #view-bar { top: 56px; padding: 4px; gap: 2px; }
-    .view-btn { padding: 5px 10px; font-size: 11px; gap: 3px; }
+    /* -- MAP: fills everything below topnav to very bottom -- */
+    #map { top: 50px !important; bottom: 0 !important; }
 
-    /* -- MAP: top clears topnav only; viewbar floats over map -- */
-    #map { top: 50px !important; bottom: 56px !important; }
+    /* -- VIEW BAR: floats over map, semi-transparent -- */
+    #view-bar {
+      top: 58px; padding: 3px; gap: 2px;
+      background: rgba(10,14,26,0.78);
+    }
+    .view-btn { padding: 4px 9px; font-size: 10px; gap: 3px; }
 
-    /* -- SIDE PANELS: hidden by default, slide in over map -- */
+    /* -- SIDE PANELS: full height, slide over map -- */
     #side-panel {
       transform: translateX(-100%);
-      width: 80vw !important;
+      width: 82vw !important;
       max-width: 300px;
       top: 50px !important;
-      height: calc(100vh - 106px) !important;
+      height: calc(100vh - 50px) !important;
     }
     #side-panel:not(.hidden) { transform: translateX(0); }
 
     #right-panel {
       transform: translateX(100%);
-      width: 80vw !important;
+      width: 82vw !important;
       max-width: 300px;
       top: 50px !important;
-      height: calc(100vh - 106px) !important;
+      height: calc(100vh - 50px) !important;
     }
     #right-panel:not(.hidden) { transform: translateX(0); }
 
-    /* toggle button positions on mobile — always hug the edge */
-    .panel-toggle { left: 0 !important; top: 58px; }
-    .rp-toggle    { right: 0 !important; top: 58px; }
+    /* toggle tabs float over map */
+    .panel-toggle { left: 0 !important; top: 94px !important; }
+    .rp-toggle    { right: 0 !important; top: 94px !important; }
 
-    /* -- BOTTOM BAR: single scrollable row, shorter height -- */
-    #bottom-bar {
-      height: 56px !important;
-      overflow-x: auto;
-      overflow-y: hidden;
-      flex-wrap: nowrap;
-      justify-content: flex-start;
-      padding: 0 8px;
-      gap: 6px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    #bottom-bar::-webkit-scrollbar { display: none; }
-    .bb-btn {
-      flex-shrink: 0;
-      font-size: 11px;
-      padding: 8px 12px;
-      white-space: nowrap;
-    }
+    /* -- BOTTOM BAR: hidden; actions in floating FAB -- */
+    #bottom-bar { display: none !important; }
+
+    /* -- FLOATING ACTION BUTTON -- */
+    #mobile-fab { display: flex !important; }
   }
 
   @media (max-width: 480px) {
     .nav-brand { font-size: 11px; }
-    #view-bar { top: 54px; }
-    .view-btn { padding: 5px 8px; font-size: 10px; }
+    #view-bar { top: 56px; }
+    .view-btn { padding: 4px 7px; font-size: 10px; }
+    .panel-toggle { top: 90px !important; }
+    .rp-toggle    { top: 90px !important; }
   }
+
+  /* ── FLOATING ACTION BUTTON (mobile) ── */
+  #mobile-fab {
+    position: fixed;
+    bottom: 18px;
+    right: 14px;
+    z-index: 1200;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  #fab-main {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--accent); border: none; cursor: pointer;
+    font-size: 20px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,.5);
+    transition: transform .2s;
+  }
+  #fab-main:active { transform: scale(.92); }
+  #fab-menu {
+    display: none;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  #fab-menu.open { display: flex; }
+  .fab-item {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .fab-label {
+    background: rgba(10,14,26,.9); color: #fff;
+    font-size: 11px; font-weight: 600; padding: 4px 9px;
+    border-radius: 4px; border: 1px solid var(--border);
+    white-space: nowrap; font-family: 'Space Grotesk', sans-serif;
+  }
+  .fab-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid var(--border); cursor: pointer;
+    font-size: 15px; display: flex; align-items: center; justify-content: center;
+    background: rgba(17,24,39,.95); color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,.4);
+    transition: background .15s;
+  }
+  .fab-btn:active { background: rgba(255,255,255,.15); }
 </style>
 </head>
 <body>
@@ -446,6 +484,29 @@
     </div>
   </div>
 
+</div>
+
+<!-- ── MOBILE FAB ─────────────────────────── -->
+<div id="mobile-fab">
+  <div id="fab-menu">
+    <div class="fab-item">
+      <span class="fab-label">Fit Map</span>
+      <button class="fab-btn" onclick="fitBounds();fabClose()">📍</button>
+    </div>
+    <div class="fab-item">
+      <span class="fab-label">Surge Routes</span>
+      <button class="fab-btn" onclick="toggleSurgeRoutes();fabClose()">⚡</button>
+    </div>
+    <div class="fab-item">
+      <span class="fab-label">Dispatch Vehicles</span>
+      <button class="fab-btn" onclick="triggerCollection();fabClose()">🚛</button>
+    </div>
+    <div class="fab-item">
+      <span class="fab-label">Surge Alert</span>
+      <button class="fab-btn" onclick="surgeAlert();fabClose()">🚨</button>
+    </div>
+  </div>
+  <button id="fab-main" onclick="fabToggle()">⋯</button>
 </div>
 
 <!-- ── BOTTOM BAR ──────────────────────────── -->
@@ -1004,6 +1065,18 @@ function showNotif(msg, type) {
   setTimeout(function(){ n.style.opacity='0'; setTimeout(function(){n.remove();},400); }, 3000);
 }
 
+// ─── MOBILE FAB ──────────────────────────────────────────────────────────────
+function fabToggle() {
+  var menu = document.getElementById('fab-menu');
+  var btn  = document.getElementById('fab-main');
+  var open = menu.classList.toggle('open');
+  btn.textContent = open ? '✕' : '⋯';
+}
+function fabClose() {
+  document.getElementById('fab-menu').classList.remove('open');
+  document.getElementById('fab-main').textContent = '⋯';
+}
+
 // ─── BUILD RIGHT PANEL ───────────────────────────────────────────────────────
 function buildPanel() {
   var alertHTML = '';
@@ -1113,12 +1186,24 @@ function togglePanel(side) {
   var isMobile = window.innerWidth <= 900;
   if (side==='left') {
     leftOpen = !leftOpen;
+    // On mobile, close right panel if opening left
+    if (isMobile && leftOpen && rightOpen) {
+      rightOpen = false;
+      document.getElementById('right-panel').classList.add('hidden');
+      document.getElementById('rp-toggle-btn').textContent = '‹ Analytics';
+    }
     document.getElementById('side-panel').classList.toggle('hidden', !leftOpen);
     var btn = document.getElementById('panel-toggle-btn');
     if (!isMobile) btn.style.left = leftOpen ? '280px' : '0';
     btn.textContent = leftOpen ? '‹ Layers' : '› Layers';
   } else {
     rightOpen = !rightOpen;
+    // On mobile, close left panel if opening right
+    if (isMobile && rightOpen && leftOpen) {
+      leftOpen = false;
+      document.getElementById('side-panel').classList.add('hidden');
+      document.getElementById('panel-toggle-btn').textContent = '› Layers';
+    }
     document.getElementById('right-panel').classList.toggle('hidden', !rightOpen);
     var rbtn = document.getElementById('rp-toggle-btn');
     if (!isMobile) rbtn.style.right = rightOpen ? '300px' : '0';
@@ -1127,11 +1212,20 @@ function togglePanel(side) {
   setTimeout(function(){ map.invalidateSize(); }, 320);
 }
 var isMobileInit = window.innerWidth <= 900;
-document.getElementById('panel-toggle-btn').style.left = isMobileInit ? '0' : '280px';
-document.getElementById('panel-toggle-btn').textContent = isMobileInit ? '› Layers' : '‹ Layers';
-document.getElementById('rp-toggle-btn').style.right = isMobileInit ? '0' : '300px';
-document.getElementById('rp-toggle-btn').textContent = isMobileInit ? '‹ Analytics' : 'Analytics ›';
-if (!isMobileInit) { leftOpen = true; rightOpen = true; }
+// On mobile, panels start hidden; toggles hug the edges (CSS handles position).
+// On desktop, panels start open.
+if (isMobileInit) {
+  document.getElementById('side-panel').classList.add('hidden');
+  document.getElementById('right-panel').classList.add('hidden');
+  document.getElementById('panel-toggle-btn').textContent = '› Layers';
+  document.getElementById('rp-toggle-btn').textContent = '‹ Analytics';
+} else {
+  document.getElementById('panel-toggle-btn').style.left = '280px';
+  document.getElementById('panel-toggle-btn').textContent = '‹ Layers';
+  document.getElementById('rp-toggle-btn').style.right = '300px';
+  document.getElementById('rp-toggle-btn').textContent = 'Analytics ›';
+  leftOpen = true; rightOpen = true;
+}
 
 // ─── AUTO-ACTIVATE SURGE ROUTES ON MARKET DAYS ───────────────────────────────
 if (IS_MARKET) {
