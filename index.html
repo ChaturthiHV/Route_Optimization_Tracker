@@ -157,6 +157,7 @@
     display: none;
     flex-direction: column;
     height: 100vh;
+    height: 100svh;
     overflow: hidden;
   }
   #map-screen.visible { display: flex; }
@@ -198,6 +199,52 @@
     transition:filter 0.18s, transform 0.12s;
   }
   .lmbtn:hover  { filter:brightness(1.15); }
+
+  /* ── MOBILE: Bottom feature bar fix ── */
+  @media (max-width: 768px) {
+    #map-screen {
+      height: 100svh;
+      height: -webkit-fill-available;
+    }
+    #l-bottombar {
+      height: auto;
+      flex-wrap: wrap;
+      padding: 6px 6px 10px;
+      gap: 5px;
+      justify-content: flex-start;
+      align-items: stretch;
+    }
+    .lflabel { display: none; }
+    .lmbtn {
+      flex: 1 1 calc(50% - 5px);
+      min-width: 0;
+      padding: 10px 6px;
+      font-size: 11px;
+      justify-content: center;
+      text-align: center;
+      white-space: normal;
+      line-height: 1.3;
+      height: auto;
+    }
+    #l-bottombar a {
+      flex: 1 1 calc(50% - 5px);
+      display: flex;
+      min-width: 0;
+    }
+    #l-bottombar a > div {
+      flex: 1;
+      padding: 10px 6px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      white-space: normal;
+      line-height: 1.3;
+      border-radius: 3px;
+    }
+    #map-nav .mn-user { display: none; }
+  }
   .lmbtn:active { transform:scale(0.97); }
   .lmbtn.active { outline:2px solid #fff; outline-offset:2px; }
   .lm-red   { background:#c0392b; }
@@ -317,6 +364,17 @@
 
 
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script>
+  // Fix: on mobile, 100vh includes browser chrome. Use actual window height instead.
+  function fixMobileHeight() {
+    var ms = document.getElementById('map-screen');
+    if (ms && window.innerWidth <= 768) {
+      ms.style.height = window.innerHeight + 'px';
+    }
+  }
+  fixMobileHeight();
+  window.addEventListener('resize', fixMobileHeight);
+</script>
 <script>
 
   function swTab(role) {

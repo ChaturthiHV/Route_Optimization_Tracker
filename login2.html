@@ -4,6 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>WasteTrack — Login</title>
+<link rel="icon" type="image/png" href="WT.png" sizes="264x264">
+
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -253,6 +255,22 @@
   .mbtn-red   { background:#dc4438; }
   .mbtn-green { background:#2e7d32; }
   .mbtn-blue  { background:#1565c0; }
+  /* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .topbar { padding: 0 10px; gap: 6px; }
+  .tb-sub  { display: none; }
+  .center  { padding: 10px; align-items: flex-start; padding-top: 20px; }
+  .card    { max-width: 100%; }
+  .card-head { padding: 14px 14px 10px; }
+  .panel   { padding: 16px 14px; }
+  .tabs .tab { font-size: 11px; padding: 9px 4px; gap: 4px; }
+  .stats   { flex-wrap: wrap; }
+  .stats .stat { min-width: calc(50% - 4px); }
+  .cfoot   { flex-wrap: wrap; gap: 10px; padding: 8px 14px 14px; }
+  .bottombar { gap: 6px; padding: 0 8px; }
+  .mbtn    { padding: 8px 10px; font-size: 11px; }
+  .flabel  { display: none; }
+}
 </style>
 </head>
 <body>

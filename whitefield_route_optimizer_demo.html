@@ -118,6 +118,41 @@
     color: var(--color-text-primary);
     font-weight: 500;
   }
+
+  /* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  /* 4-col stats grid → 2-col */
+  .stats-grid, div[style*="grid-template-columns: repeat(4"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .container { padding: 10px; }
+}
+
+@media (max-width: 600px) {
+  /* 2-col → 1-col */
+  .stats-grid, div[style*="grid-template-columns: repeat(4"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* canvas / map */
+  canvas { width: 100% !important; height: auto !important; }
+
+  /* control bar wraps */
+  .controls, .btn-row { flex-wrap: wrap; gap: 6px; }
+  .controls button, .btn-row button { flex: 1 1 calc(50% - 6px); font-size: 12px; }
+
+  /* route list */
+  .route-list, .stop-list { font-size: 12px; }
+
+  /* legend */
+  .legend { flex-wrap: wrap; gap: 6px; }
+  .legend-item { font-size: 11px; }
+
+  /* general text scale */
+  body { font-size: 13px; }
+  h1   { font-size: 18px; }
+  h2   { font-size: 15px; }
+}
 </style>
 
 <canvas id="c" height="420"></canvas>

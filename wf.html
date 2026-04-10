@@ -2,14 +2,15 @@
 <html>
 <head>
   <title>Geo Dashboard</title>
+  <link rel="icon" type=""image/png" href="WT.png" sizes="264x264">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; background: #1a1a2e; }
-    #map { height: calc(100vh - 80px); width: 100%; }
+    #map { height: 100vh; width: 100%; }
     #controls {
       height: 80px; background: #16213e;
-      display: flex; align-items: center; justify-content: center; gap: 12px;
+      display: flex; align-items: center; justify-content: center; gap: 12px; position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
     }
     .layer-btn {
       padding: 10px 20px; border: 3px solid transparent; border-radius: 6px;
@@ -34,6 +35,25 @@
       font-size: 12px; font-weight: bold; background: transparent; color: #aaa; transition: all .2s;
     }
     .rs-btn.active { background: #27ae60; color: white; }
+    /* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  /* map fills remaining height properly */
+  #map { height: calc(100vh - 120px); }
+
+  /* header / control bar */
+  header, .header, #controls {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .header-title { font-size: 13px; }
+  .header-sub   { display: none; }
+  select, input[type=range] { font-size: 12px; }
+
+  /* info panel if present */
+  #info-panel, .info-panel { font-size: 11px; padding: 6px 8px; }
+}
   </style>
 </head>
 <body>
@@ -214,7 +234,11 @@
   document.getElementById('btn-road').addEventListener('click', function(){ handleBtn('road',this); });
   document.getElementById('btn-ndvi').addEventListener('click', function(){ handleBtn('ndvi',this); });
   document.getElementById('btn-node').addEventListener('click', function(){ handleBtn('node',this); });
-
+function fixWfHeight() {
+    document.getElementById('map').style.height = (window.innerHeight - 80) + 'px';
+  }
+  fixWfHeight();
+  window.addEventListener('resize', fixWfHeight);
 </script>
 </body>
 </html>
