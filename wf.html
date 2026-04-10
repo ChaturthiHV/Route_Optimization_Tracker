@@ -34,6 +34,25 @@
       font-size: 12px; font-weight: bold; background: transparent; color: #aaa; transition: all .2s;
     }
     .rs-btn.active { background: #27ae60; color: white; }
+    /* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  /* map fills remaining height properly */
+  #map { height: calc(100vh - 120px); }
+
+  /* header / control bar */
+  header, .header, #controls {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .header-title { font-size: 13px; }
+  .header-sub   { display: none; }
+  select, input[type=range] { font-size: 12px; }
+
+  /* info panel if present */
+  #info-panel, .info-panel { font-size: 11px; padding: 6px 8px; }
+}
   </style>
 </head>
 <body>

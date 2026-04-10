@@ -170,6 +170,39 @@
   }
   .leaflet-popup-tip { background:rgba(10,14,26,0.97) !important; }
   .leaflet-popup-close-button { color:rgba(255,255,255,0.4) !important; }
+  /* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  /* topbar */
+  .mn-tag   { display: none; }
+  .mn-back  { padding: 4px 8px; font-size: 11px; }
+  .mode-pills { gap: 4px; flex-wrap: wrap; }
+  .mode-pills button { padding: 4px 8px; font-size: 10px; }
+
+  /* statusbar */
+  #statusbar { overflow-x: auto; white-space: nowrap; flex-wrap: nowrap; justify-content: flex-start; }
+  .ss-item   { padding: 0 10px; flex-shrink: 0; }
+
+  /* body: stack vertically */
+  #body-wrap {
+    flex-direction: column;
+    height: auto;
+  }
+  #map-wrap { height: 55vmax; min-height: 260px; }
+  #right-panel {
+    width: 100% !important;
+    height: auto;
+    max-height: 320px;
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    overflow-y: auto;
+  }
+  .density-cards { flex-direction: row; flex-wrap: wrap; overflow-x: auto; }
+  .dc-card { min-width: 160px; }
+
+  /* bottom bar */
+  #action-bar { flex-wrap: wrap; height: auto; padding: 10px; gap: 8px; }
+  #action-bar button { flex: 1 1 calc(50% - 8px); font-size: 11px; }
+}
 </style>
 </head>
 <body>

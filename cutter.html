@@ -150,6 +150,40 @@
   .ld { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
   .ll { width:20px; height:3px; border-radius:1px; flex-shrink:0; }
   .lb { width:18px; height:10px; border-radius:2px; flex-shrink:0; }
+
+  /* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  /* topbar */
+  .mn-tag  { display: none; }
+  .mn-back { padding: 4px 8px; font-size: 11px; }
+  .mode-pills { gap: 4px; }
+  .mode-pills button { padding: 5px 8px; font-size: 10px; }
+
+  /* statusbar — scroll horizontally instead of wrapping */
+  #statusbar { overflow-x: auto; white-space: nowrap; flex-wrap: nowrap; justify-content: flex-start; }
+  .ss-item   { padding: 0 10px; flex-shrink: 0; }
+
+  /* body: stack map on top, panel below */
+  #body-wrap {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 86px - 72px);
+  }
+  #map { height: 55vmax; min-height: 260px; }
+  #right-panel {
+    width: 100% !important;
+    height: 280px;
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  #zone-list { min-width: 200px; }
+
+  /* bottom action bar */
+  #action-bar { flex-wrap: wrap; gap: 8px; height: auto; padding: 10px; }
+  #action-bar button { flex: 1 1 calc(50% - 8px); font-size: 11px; padding: 9px 6px; }
+}
 </style>
 </head>
 <body>

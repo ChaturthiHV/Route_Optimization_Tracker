@@ -249,6 +249,35 @@
     100% { opacity:1; stroke-width:2; }
   }
   .surge-active-layer { animation: surgePulse 2s infinite; }
+  /* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  /* hide fixed sidebars by default; toggle buttons remain visible */
+  #left-panel  { transform: translateX(-100%); transition: transform .25s; }
+  #right-panel { transform: translateX(100%);  transition: transform .25s; }
+  #left-panel.open  { transform: translateX(0); }
+  #right-panel.open { transform: translateX(0); }
+
+  /* toggle buttons reposition to edges */
+  .lp-toggle { left: 0 !important; }
+  .rp-toggle { right: 0 !important; }
+
+  /* navbar */
+  .nav-back  { padding: 4px 8px; font-size: 11px; }
+  .nav-brand { font-size: 12px; }
+  .nav-badge { display: none; }
+  .nav-day   { display: none; }
+  .tab-bar   { gap: 2px; }
+  .tab-btn   { padding: 5px 8px; font-size: 10px; }
+
+  /* bottom bar */
+  #bottom-bar { overflow-x: auto; flex-wrap: nowrap; padding: 0 8px; gap: 8px; }
+  #bottom-bar button { flex-shrink: 0; font-size: 11px; padding: 8px 10px; }
+}
+
+@media (max-width: 480px) {
+  #left-panel  { width: 85vw !important; }
+  #right-panel { width: 85vw !important; }
+}
 </style>
 </head>
 <body>

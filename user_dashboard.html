@@ -198,6 +198,44 @@
   .pop-title { font-size:13px; font-weight:700; margin-bottom:4px; }
   .pop-sub   { color:rgba(255,255,255,0.4); font-size:11px; }
   .pop-badge { display:inline-block; padding:2px 7px; border-radius:2px; font-size:9px; font-weight:700; text-transform:uppercase; margin-top:4px; }
+  /* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  /* topbar */
+  .tn-brand-sub { display: none; }
+  .tn-tabs { overflow-x: auto; flex-wrap: nowrap; }
+  .tn-tab  { flex-shrink: 0; font-size: 11px; padding: 0 10px; }
+
+  /* layout: sidebar below map */
+  #main-wrap, .main-wrap, body > div.flex, #layout {
+    flex-direction: column !important;
+  }
+  #sidebar {
+    width: 100% !important;
+    height: 260px;
+    border-left: none !important;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    overflow-y: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 8px;
+    gap: 8px;
+  }
+  .vehicle-card { min-width: 260px; flex: 1 1 260px; }
+  #map { height: 52vmax; min-height: 240px; flex: unset; }
+
+  /* bottom bar */
+  #bottom-bar, .bottom-bar { overflow-x: auto; flex-wrap: nowrap; gap: 10px; padding: 0 10px; }
+  .bb-seg { flex-shrink: 0; font-size: 11px; }
+
+  /* loading overlay */
+  #loading-overlay { font-size: 13px; }
+}
+
+@media (max-width: 480px) {
+  #sidebar { height: 220px; }
+  .vehicle-card { min-width: 100%; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>

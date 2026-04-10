@@ -203,6 +203,22 @@
   .lm-red   { background:#c0392b; }
   .lm-green { background:#27ae60; }
   .lm-blue  { background:#2980b9; }
+  /* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  #l-topbar { padding: 0 10px; gap: 6px; }
+  #l-topbar .tb-sub, #l-topbar span:nth-child(2) { display: none; }
+  #login-screen .center, #l-center { padding: 10px; align-items: flex-start; padding-top: 16px; }
+  .login-card { max-width: 100%; }
+  .lc-head { padding: 14px 14px 10px; }
+  .lpanel { padding: 16px 14px; }
+  .ltabs .ltab { font-size: 11px; padding: 9px 4px; }
+  .lstats { flex-wrap: wrap; }
+  .lstats .lstat { min-width: calc(50% - 4px); }
+  .lfoot  { flex-wrap: wrap; gap: 10px; padding: 8px 14px 14px; }
+  .bottombar { gap: 6px; padding: 0 8px; }
+  .mbtn  { padding: 8px 10px; font-size: 11px; }
+  .flabel { display: none; }
+}
 </style>
 </head>
 <body>
