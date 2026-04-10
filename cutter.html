@@ -56,7 +56,7 @@
   .ss-val.amber { color:#ffb300; }
 
   /* MAIN BODY */
-  #body-wrap { display:flex; height:calc(100vh - 86px - 72px); }
+  #body-wrap { display:flex; height:calc(100svh - 86px - 72px); }
 
   /* MAP */
   #map { flex:1; height:100%; }
@@ -374,6 +374,12 @@ function toggleLayer(key,btn){
 }
 
 map.on('click',function(){ clearActive(); });
+
+function fixCutterHeight() {
+    document.getElementById('body-wrap').style.height = (window.innerHeight - 86 - 72) + 'px';
+  }
+  fixCutterHeight();
+  window.addEventListener('resize', fixCutterHeight);
 </script>
 </body>
 </html>

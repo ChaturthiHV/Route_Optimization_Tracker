@@ -55,7 +55,7 @@
   .green{ color:#27ae60; } .amber{ color:#e67e22; } .red{ color:#e74c3c; }
 
   /* BODY */
-  #body-wrap { display:flex; height:calc(100vh - 50px - 36px - 72px); }
+  #body-wrap { display:flex; height:calc(100svh - 50px - 36px - 72px); }
 
   /* MAP */
   #map-wrap { flex:1; position:relative; overflow:hidden; }
@@ -466,6 +466,12 @@ map.on('click', function(){
   if(activeItem){ activeItem.classList.remove('active'); activeItem.style.borderLeftColor='transparent'; activeItem=null; }
   document.getElementById('detail-panel').classList.remove('open');
 });
+
+function fixDensityHeight() {
+    document.getElementById('body-wrap').style.height = (window.innerHeight - 50 - 36 - 72) + 'px';
+  }
+  fixDensityHeight();
+  window.addEventListener('resize', fixDensityHeight);
 </script>
 </body>
 </html>
